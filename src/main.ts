@@ -21,7 +21,7 @@ initStelEngine(canvas).then((stel) => {
   //   stel.core.stars.addDataSource({ url: '/skydata/stars' })
   //   stel.core.skycultures.addDataSource({ url: '/skydata/skycultures/western', key: 'western' })
   //   stel.core.landscapes.addDataSource({ url: '/skydata/landscapes/guereins', key: 'guereins' })
-  //   stel.core.milkyway.addDataSource({ url: '/skydata/surveys/milkyway' })
+  stel.core.milkyway.addDataSource({ url: '/skydata/surveys/milkyway' })
   // See README.md for where to obtain this data; it is not bundled with the engine source.
 
   stel.core.observer.utc = Date.now() / 86400000 + 2440587.5
