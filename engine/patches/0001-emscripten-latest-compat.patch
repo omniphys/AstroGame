@@ -36,3 +36,20 @@ index e1e48ffb..2713431b 100644
  env.Append(LINKFLAGS=flags)
  env.Append(LIBS=['GL'])
  
+diff --git a/src/designation.c b/src/designation.c
+index ad385c56..9cf287a6 100644
+--- a/src/designation.c
++++ b/src/designation.c
+@@ -427,7 +427,11 @@ void designation_cleanup(const char *dsgn, char *out, int size, int flags)
+         }
+     }
+ 
+-    snprintf(out, size, "%s", dsgn);
++    // Bare common name (e.g. "Sirius") with no recognized prefix: still
++    // worth trying to translate, for datasets that don't use the "NAME "
++    // convention.
++    snprintf(out, size, "%s",
++             (flags & DSGN_TRANSLATE) ? sys_translate("sky", dsgn) : dsgn);
+ }
+ 
+ /*

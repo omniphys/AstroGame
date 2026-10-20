@@ -14,6 +14,8 @@ A web game built on top of [Stellarium Web Engine](https://github.com/Stellarium
   (click-to-select is built into the engine; this just renders its info), in Korean
   with the original name alongside.
 - `src/i18n.ts` — English → Korean name lookup, see "Korean names" below.
+- `public/fonts/NotoSansKR-Variable.ttf` — loaded at runtime (`stel.setFont`) so
+  Korean on-canvas labels actually have glyphs to render with; see "Korean names".
 - `public/engine/` — the built `stellarium-web-engine.js` / `.wasm` (committed so the
   app runs without rebuilding; regenerate with `scripts/build-engine.sh` after
   updating the submodule or patch).
@@ -24,8 +26,10 @@ A web game built on top of [Stellarium Web Engine](https://github.com/Stellarium
 - `engine/patches/0001-emscripten-latest-compat.patch` — fixes a handful of build flags
   (`EXTRA_EXPORTED_RUNTIME_METHODS` → `EXPORTED_RUNTIME_METHODS`, deprecated `allocate`/
   `ALLOC_NORMAL`/`_malloc`/`_free` runtime methods, link-only flags leaking into the compile
-  step, `-Werror` on an old C/C++ codebase) so the engine builds with a current Emscripten SDK.
-  The upstream repo predates Emscripten's upstream/LLVM backend.
+  step, `-Werror` on an old C/C++ codebase) so the engine builds with a current Emscripten SDK
+  (the upstream repo predates Emscripten's upstream/LLVM backend), plus a small
+  `src/designation.c` change so bare (non-`"NAME X"`) star/DSO names are still translatable —
+  see "Korean names".
 - `scripts/build-engine.sh` — rebuilds the engine and copies output into `public/engine/`.
 
 ## Running the game
@@ -118,22 +122,35 @@ deploy to a host that does this (e.g. nginx with `gzip_static on`), disable that
 `public/i18n/skyculture-ko.json` is Stellarium's own English→Korean name dictionary
 (vendored from `https://stellarium.sfo2.cdn.digitaloceanspaces.com/i18n/v1/skyculture/ko.json`,
 ~7000 entries: planets/moons/stars/constellations/DSOs). `src/i18n.ts` looks names up in
-it; anything missing (catalog IDs like `M 31`, `HIP 1234`, most individual star proper
-names in our reduced test catalog) is left in English, by design.
+it; anything missing (catalog IDs like `M 31`, `HIP 1234`) is left in English, by design.
 
-- **Selection panel** (`src/selection-panel.ts`): always shows "한글명 (English name)" —
-  this works for anything in the dictionary, independent of the engine's own label system.
-- **On-canvas labels** (planets, constellation lines/names, star names): wired via the
-  engine's `translateFn` hook, so they render in Korean directly *if* the engine's
-  internal skyculture-names lookup finds the object first - which it does for planets,
-  but **not** for most stars/constellations in `apps/test-skydata`, since that's a cut-down
-  test dataset without the name/translation metadata the lookup needs (confirmed by tracing
-  `designation.c`/`skycultures.c`: translation only fires for `"NAME X"`-prefixed
-  designations, which this reduced catalog mostly doesn't use). A fuller skyculture dataset
-  would fix this without any code changes - the hook is already correctly wired.
+- **Selection panel** (`src/selection-panel.ts`): always shows "한글명 (English name)".
+- **On-canvas labels** (planets, stars, DSOs): wired via the engine's `translateFn`
+  hook, same dictionary. Two things had to be fixed for this to actually show up:
+  1. The engine only translates designations in a `"NAME X"` format
+     (`designation_cleanup` in `src/designation.c`); most star/DSO names in the bundled
+     `apps/test-skydata` are stored bare (e.g. `"Sirius"`, not `"NAME Sirius"`) and were
+     silently skipped. `engine/patches/0001-emscripten-latest-compat.patch` adds a
+     fallback that tries translating bare names too — this needs the engine rebuilt
+     (`bash scripts/build-engine.sh`) to take effect, since it's a C change.
+  2. The engine's *built-in* font is a heavily subset, Latin-only NotoSans (~16KB) baked
+     into the WASM — translated Korean text has no glyphs to render with and silently
+     disappears. `src/main.ts` loads `public/fonts/NotoSansKR-Variable.ttf` at runtime via
+     `stel.setFont('regular'/'bold', url)`, which the engine tries *before* falling back
+     to its built-in font — no rebuild needed for this part, just the font asset.
+  - **Still English:** constellation names/lines (`src/modules/constellations.c`'s
+    `skycultures_get_label()` falls back to the raw, untranslated id when the skyculture's
+    name database has no entry for it — true for most constellations in this reduced
+    dataset — and we didn't patch that path) and Bayer/Flamsteed-style star designations
+    (e.g. "Iota Aurigae": a different, unpatched code path, and not something Stellarium's
+    dictionary covers anyway).
 
 ## License
 
 `stellarium-web-engine` is **AGPL-3.0** (`engine/stellarium-web-engine/LICENSE-AGPL-3.0.txt`).
 Distributing or running this game as a network service requires making the complete
 corresponding source available to users, including this project's own code, per AGPL §13.
+
+`public/fonts/NotoSansKR-Variable.ttf` (Google's Noto Sans KR, from the
+[google/fonts](https://github.com/google/fonts/tree/main/ofl/notosanskr) repo) is
+**SIL Open Font License 1.1** — see `public/fonts/NotoSansKR-OFL.txt`.

@@ -39,6 +39,14 @@ async function main() {
   const stel = await initStelEngine(canvas, (_domain, str) => ko(str))
   console.log('Stellarium Web Engine ready', stel)
 
+  // The engine's built-in font is a heavily subset Latin-only NotoSans, so
+  // Korean labels would otherwise translate correctly but render as nothing
+  // (no glyphs). Load a Hangul-capable font as a fallback for both faces -
+  // this is additive (tried first, falls back to the built-in font for
+  // glyphs it doesn't have), not a replacement.
+  stel.setFont('regular', '/fonts/NotoSansKR-Variable.ttf')
+  stel.setFont('bold', '/fonts/NotoSansKR-Variable.ttf')
+
   const core = stel.core
   core.stars.addDataSource({ url: '/skydata/stars' })
   core.skycultures.addDataSource({ url: '/skydata/skycultures/western', key: 'western' })
