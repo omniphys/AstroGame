@@ -16,6 +16,7 @@ const TOGGLES: ToggleSpec[] = [
   { label: 'Landscape', getObj: (s) => s.core.landscapes, attr: 'visible' },
   { label: 'Equatorial Grid', getObj: (s) => s.core.lines.equatorial, attr: 'visible' },
   { label: 'Azimuthal Grid', getObj: (s) => s.core.lines.azimuthal, attr: 'visible' },
+  { label: 'DSS Photos', getObj: (s) => s.core.dss, attr: 'visible' },
 ]
 
 export function createToolbar(stel: StelInstance): HTMLDivElement {

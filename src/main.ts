@@ -1,6 +1,8 @@
 import './style.css'
 import { initStelEngine } from './engine'
+import { initObserverLocation } from './location'
 import { createToolbar } from './ui'
+import { createSelectionPanel } from './selection-panel'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <canvas id="stel-canvas" style="width:100vw;height:100vh;display:block;"></canvas>
@@ -15,7 +17,7 @@ function resizeCanvas() {
 resizeCanvas()
 window.addEventListener('resize', resizeCanvas)
 
-initStelEngine(canvas).then((stel) => {
+initStelEngine(canvas).then(async (stel) => {
   console.log('Stellarium Web Engine ready', stel)
 
   const core = stel.core
@@ -29,12 +31,29 @@ initStelEngine(canvas).then((stel) => {
   core.planets.addDataSource({ url: '/skydata/surveys/sso/sun', key: 'sun' })
   core.comets.addDataSource({ url: '/skydata/CometEls.txt', key: 'mpc_comets' })
   core.satellites.addDataSource({ url: '/skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
+  // Public CDS HiPS survey (not bundled - it's a huge tile pyramid fetched
+  // live). Powers the "zoom in to see a real photo" effect; toggled off by
+  // default via the DSS Photos button since it depends on third-party
+  // network access.
+  core.dss.addDataSource({ url: 'https://alasky.cds.unistra.fr/DSS/DSSColor' })
 
   // Constellation lines/art are hidden by default in the engine; turn lines on
   // so the sky doesn't look empty, and leave art as an opt-in toggle.
   core.constellations.lines_visible = true
 
-  core.observer.utc = Date.now() / 86400000 + 2440587.5
+  // Real time, flowing forward, from the browser's actual location.
+  core.observer.utc = stel.date2MJD(new Date())
+  core.time_speed = 1
+  await initObserverLocation(stel)
 
   createToolbar(stel)
+  createSelectionPanel(stel)
+
+  // Space centers and smoothly locks the view on whatever is selected
+  // (clicking an object on the canvas sets core.selection automatically).
+  window.addEventListener('keydown', (e) => {
+    if (e.code !== 'Space' || !core.selection) return
+    e.preventDefault()
+    stel.pointAndLock(core.selection, 1.0)
+  })
 })

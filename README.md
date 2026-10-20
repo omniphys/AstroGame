@@ -9,6 +9,9 @@ A web game built on top of [Stellarium Web Engine](https://github.com/Stellarium
 - `src/main.ts` — app entry point: creates the canvas, initializes the engine, and wires
   up the sky data sources below.
 - `src/ui.ts` — the toggle toolbar (stars, milky way, constellations, grids, etc.).
+- `src/location.ts` — points the observer at the browser's geolocation, if granted.
+- `src/selection-panel.ts` — the floating panel shown when an object is selected
+  (click-to-select is built into the engine; this just renders its info).
 - `public/engine/` — the built `stellarium-web-engine.js` / `.wasm` (committed so the
   app runs without rebuilding; regenerate with `scripts/build-engine.sh` after
   updating the submodule or patch).
@@ -31,8 +34,17 @@ npm run dev
 ```
 
 This renders the full sky (stars, milky way, constellations, nebulae, a landscape
-horizon, atmosphere) with WebGL, with a toolbar to toggle each layer on/off — see
+horizon, atmosphere) with WebGL for the current real time and, if you grant location
+access, your actual location — with a toolbar to toggle each layer on/off. See
 "Sky data" below for where that data comes from and how to swap in more of it.
+
+**Interaction** (all built into the engine; see `src/main.ts`/`src/selection-panel.ts`):
+- Drag to pan, scroll to zoom (zooming into the DSS-covered sky, or the Sun/Moon,
+  reveals real imagery instead of just a dot/disc).
+- Click an object to select it — a small panel shows its name, type, magnitude,
+  distance, and (for stars) spectral type/color.
+- With something selected, press **Space** to smoothly recenter and lock the view
+  on it.
 
 ## Rebuilding the engine
 
@@ -79,6 +91,12 @@ If you re-copy `apps/test-skydata/` after updating the submodule:
 ```sh
 rm -rf public/skydata && cp -r engine/stellarium-web-engine/apps/test-skydata public/skydata
 ```
+
+**DSS photos (zoomed-in imagery of arbitrary sky objects):** `src/main.ts` also points
+`core.dss` at the public CDS HiPS survey `https://alasky.cds.unistra.fr/DSS/DSSColor`
+(not bundled — it's a live, third-party, many-GB tile pyramid). This is what the
+"DSS Photos" toolbar toggle controls; the Sun/Moon's own bundled imagery and star/DSO
+rendering work without it.
 
 **`.gz` data gotcha:** `tle_satellite.jsonl.gz` is gunzipped by the engine itself, not
 the browser. Some static file servers (Vite's dev server included — handled here via
