@@ -11,7 +11,9 @@ A web game built on top of [Stellarium Web Engine](https://github.com/Stellarium
 - `src/ui.ts` — the toggle toolbar (stars, milky way, constellations, grids, etc.).
 - `src/location.ts` — points the observer at the browser's geolocation, if granted.
 - `src/selection-panel.ts` — the floating panel shown when an object is selected
-  (click-to-select is built into the engine; this just renders its info).
+  (click-to-select is built into the engine; this just renders its info), in Korean
+  with the original name alongside.
+- `src/i18n.ts` — English → Korean name lookup, see "Korean names" below.
 - `public/engine/` — the built `stellarium-web-engine.js` / `.wasm` (committed so the
   app runs without rebuilding; regenerate with `scripts/build-engine.sh` after
   updating the submodule or patch).
@@ -92,6 +94,12 @@ If you re-copy `apps/test-skydata/` after updating the submodule:
 rm -rf public/skydata && cp -r engine/stellarium-web-engine/apps/test-skydata public/skydata
 ```
 
+**Planet imagery:** the bundled data only has Sun/Moon textures; `src/main.ts` also
+points `core.planets` at Stellarium's own hosted HiPS surveys
+(`https://data.stellarium.org/surveys/<mercury|venus|mars|jupiter|saturn|uranus|neptune>`)
+for the rest, live third-party fetches like the DSS survey below. Zoom in on a planet to
+see it load (HiPS tiles only fetch once a body is close enough to be worth texturing).
+
 **DSS photos (zoomed-in imagery of arbitrary sky objects):** `src/main.ts` also points
 `core.dss` at the public CDS HiPS survey `https://alasky.cds.unistra.fr/DSS/DSSColor`
 (not bundled — it's a live, third-party, many-GB tile pyramid). This is what the
@@ -104,6 +112,25 @@ the browser. Some static file servers (Vite's dev server included — handled he
 transparently decompress it first and the engine then fails to gunzip the result. If you
 deploy to a host that does this (e.g. nginx with `gzip_static on`), disable that for
 `/skydata/*.gz` or rename the file so it isn't autodetected as pre-compressed.
+
+## Korean names
+
+`public/i18n/skyculture-ko.json` is Stellarium's own English→Korean name dictionary
+(vendored from `https://stellarium.sfo2.cdn.digitaloceanspaces.com/i18n/v1/skyculture/ko.json`,
+~7000 entries: planets/moons/stars/constellations/DSOs). `src/i18n.ts` looks names up in
+it; anything missing (catalog IDs like `M 31`, `HIP 1234`, most individual star proper
+names in our reduced test catalog) is left in English, by design.
+
+- **Selection panel** (`src/selection-panel.ts`): always shows "한글명 (English name)" —
+  this works for anything in the dictionary, independent of the engine's own label system.
+- **On-canvas labels** (planets, constellation lines/names, star names): wired via the
+  engine's `translateFn` hook, so they render in Korean directly *if* the engine's
+  internal skyculture-names lookup finds the object first - which it does for planets,
+  but **not** for most stars/constellations in `apps/test-skydata`, since that's a cut-down
+  test dataset without the name/translation metadata the lookup needs (confirmed by tracing
+  `designation.c`/`skycultures.c`: translation only fires for `"NAME X"`-prefixed
+  designations, which this reduced catalog mostly doesn't use). A fuller skyculture dataset
+  would fix this without any code changes - the hook is already correctly wired.
 
 ## License
 

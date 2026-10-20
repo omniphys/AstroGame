@@ -3,6 +3,7 @@ import { initStelEngine } from './engine'
 import { initObserverLocation } from './location'
 import { createToolbar } from './ui'
 import { createSelectionPanel } from './selection-panel'
+import { loadKoDict, ko } from './i18n'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <canvas id="stel-canvas" style="width:100vw;height:100vh;display:block;"></canvas>
@@ -17,7 +18,25 @@ function resizeCanvas() {
 resizeCanvas()
 window.addEventListener('resize', resizeCanvas)
 
-initStelEngine(canvas).then(async (stel) => {
+// Official Stellarium-hosted HiPS textures for the planets (our bundled
+// skydata only ships Moon/Sun imagery - see below). Live third-party fetch,
+// same as the DSS survey.
+const PLANET_SURVEYS: Record<string, string> = {
+  mercury: 'https://data.stellarium.org/surveys/mercury',
+  venus: 'https://data.stellarium.org/surveys/venus',
+  mars: 'https://data.stellarium.org/surveys/mars',
+  jupiter: 'https://data.stellarium.org/surveys/jupiter',
+  saturn: 'https://data.stellarium.org/surveys/saturn',
+  uranus: 'https://data.stellarium.org/surveys/uranus',
+  neptune: 'https://data.stellarium.org/surveys/neptune',
+}
+
+async function main() {
+  // Needed synchronously by translateFn below, so load it before the engine
+  // starts calling that function to label things on screen.
+  await loadKoDict()
+
+  const stel = await initStelEngine(canvas, (_domain, str) => ko(str))
   console.log('Stellarium Web Engine ready', stel)
 
   const core = stel.core
@@ -29,6 +48,9 @@ initStelEngine(canvas).then(async (stel) => {
   core.minor_planets.addDataSource({ url: '/skydata/mpcorb.dat', key: 'mpc_asteroids' })
   core.planets.addDataSource({ url: '/skydata/surveys/sso/moon', key: 'moon' })
   core.planets.addDataSource({ url: '/skydata/surveys/sso/sun', key: 'sun' })
+  for (const [key, url] of Object.entries(PLANET_SURVEYS)) {
+    core.planets.addDataSource({ url, key })
+  }
   core.comets.addDataSource({ url: '/skydata/CometEls.txt', key: 'mpc_comets' })
   core.satellites.addDataSource({ url: '/skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
   // Public CDS HiPS survey (not bundled - it's a huge tile pyramid fetched
@@ -56,4 +78,6 @@ initStelEngine(canvas).then(async (stel) => {
     e.preventDefault()
     stel.pointAndLock(core.selection, 1.0)
   })
-})
+}
+
+main()

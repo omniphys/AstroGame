@@ -19,7 +19,10 @@ declare global {
   }
 }
 
-export function initStelEngine(canvas: HTMLCanvasElement): Promise<StelInstance> {
+export function initStelEngine(
+  canvas: HTMLCanvasElement,
+  translateFn: (domain: string, str: string) => string = (_domain, str) => str,
+): Promise<StelInstance> {
   if (typeof window.StelWebEngine !== 'function') {
     return Promise.reject(
       new Error(
@@ -33,7 +36,7 @@ export function initStelEngine(canvas: HTMLCanvasElement): Promise<StelInstance>
     window.StelWebEngine({
       wasmFile: '/engine/stellarium-web-engine.wasm',
       canvas,
-      translateFn: (_domain, str) => str,
+      translateFn,
       onReady: (stel) => resolve(stel),
     });
   });
