@@ -1,1 +1,5 @@
 *.sh text eol=lf
+
+# Engine data files (fixed-width astronomical formats, binary tiles) must be
+# byte-for-byte as shipped — autocrlf CRLF conversion would corrupt them.
+public/skydata/** -text

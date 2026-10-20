@@ -6,10 +6,15 @@ A web game built on top of [Stellarium Web Engine](https://github.com/Stellarium
 ## Layout
 
 - `src/engine.ts` — thin TS wrapper around the engine's global `StelWebEngine()` loader.
-- `src/main.ts` — app entry point: creates the canvas and initializes the engine.
+- `src/main.ts` — app entry point: creates the canvas, initializes the engine, and wires
+  up the sky data sources below.
+- `src/ui.ts` — the toggle toolbar (stars, milky way, constellations, grids, etc.).
 - `public/engine/` — the built `stellarium-web-engine.js` / `.wasm` (committed so the
   app runs without rebuilding; regenerate with `scripts/build-engine.sh` after
   updating the submodule or patch).
+- `public/skydata/` — star/constellation/landscape/etc. data, see "Sky data" below.
+- `vite.config.ts` — dev-server tweak so `.gz` data isn't double-decompressed (see
+  "Sky data" below).
 - `engine/stellarium-web-engine/` — the engine source, as a git submodule.
 - `engine/patches/0001-emscripten-latest-compat.patch` — fixes a handful of build flags
   (`EXTRA_EXPORTED_RUNTIME_METHODS` → `EXPORTED_RUNTIME_METHODS`, deprecated `allocate`/
@@ -25,8 +30,9 @@ npm install
 npm run dev
 ```
 
-This renders the sky engine (atmosphere, horizon, cardinal points) with WebGL,
-but **no stars/constellations/landscapes will show yet** — see "Sky data" below.
+This renders the full sky (stars, milky way, constellations, nebulae, a landscape
+horizon, atmosphere) with WebGL, with a toolbar to toggle each layer on/off — see
+"Sky data" below for where that data comes from and how to swap in more of it.
 
 ## Rebuilding the engine
 
@@ -58,16 +64,28 @@ git -C engine/stellarium-web-engine checkout-index -a -f
 
 ## Sky data (stars, constellations, landscapes, planets)
 
-The engine source only ships shaders/fonts/textures — the actual astronomical data
-(star catalog, sky cultures, DSOs, landscape panoramas, milky way survey tiles, orbital
-elements, etc.) is a separate, much larger bundle that upstream's demo apps
-(`apps/simple-html`, `apps/web-frontend`) expect to find under a `skydata/` directory,
-loaded via `core.<module>.addDataSource({ url, key })` calls. It is **not** included in
-the `stellarium-web-engine` repo or in this project.
+`public/skydata/` is a copy of the submodule's `apps/test-skydata/` — a small (~5MB)
+bundle with a reduced star catalog, the western sky culture, one landscape panorama,
+a low-res milky way survey, minor planet/comet/satellite elements, and sun/moon
+imagery. `src/main.ts` wires it up via `core.<module>.addDataSource({ url, key })`.
+It's enough to render a real sky (see the toolbar toggles in the running app), but it's
+a test dataset, not the full Gaia catalog Stellarium Web uses in production — swap in a
+fuller bundle (from Stellarium's data releases, or generated via the submodule's
+`tools/make-*.py` scripts) under `public/skydata/` the same way for more stars/DSOs/
+landscapes/sky cultures.
 
-You'll need to source or build this yourself (e.g. from Stellarium's data releases, or by
-generating your own via the `tools/make-*.py` scripts in the submodule) and then wire it
-up in `src/main.ts` where the `addDataSource` calls are stubbed out as comments.
+If you re-copy `apps/test-skydata/` after updating the submodule:
+
+```sh
+rm -rf public/skydata && cp -r engine/stellarium-web-engine/apps/test-skydata public/skydata
+```
+
+**`.gz` data gotcha:** `tle_satellite.jsonl.gz` is gunzipped by the engine itself, not
+the browser. Some static file servers (Vite's dev server included — handled here via
+`vite.config.ts`) set `Content-Encoding: gzip` for `.gz` files, which makes the browser
+transparently decompress it first and the engine then fails to gunzip the result. If you
+deploy to a host that does this (e.g. nginx with `gzip_static on`), disable that for
+`/skydata/*.gz` or rename the file so it isn't autodetected as pre-compressed.
 
 ## License
 
