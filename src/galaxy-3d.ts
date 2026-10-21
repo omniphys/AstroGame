@@ -15,6 +15,8 @@ const GALAXY_RADIUS = 220
 // of 27,000 / 50,000 = 0.54.
 const SUN_DISTANCE_RATIO = 0.54
 const SUN_ANGLE = Math.PI * 0.15 // arbitrary - the texture has no machine-readable arm geometry to align to
+// Negative because a positive Y rotation is counter-clockwise when viewed from above.
+const SPIN_SPEED = -0.02 // rad/s, ~5 min per turn
 
 export function createGalaxy3DView(): () => void {
   const overlay = document.createElement('div')
@@ -53,7 +55,10 @@ export function createGalaxy3DView(): () => void {
     new THREE.MeshBasicMaterial({ map: galaxyTexture, transparent: true, side: THREE.DoubleSide }),
   )
   galaxyDisc.rotation.x = -Math.PI / 2
-  scene.add(galaxyDisc)
+
+  const galaxy = new THREE.Group()
+  galaxy.add(galaxyDisc)
+  scene.add(galaxy)
 
   const sunRadius = GALAXY_RADIUS * SUN_DISTANCE_RATIO
   const sunMarker = new THREE.Mesh(
@@ -61,13 +66,14 @@ export function createGalaxy3DView(): () => void {
     new THREE.MeshBasicMaterial({ color: 0xffffff }),
   )
   sunMarker.position.set(Math.cos(SUN_ANGLE) * sunRadius, 1, Math.sin(SUN_ANGLE) * sunRadius)
-  scene.add(sunMarker)
+  galaxy.add(sunMarker)
 
   const sunLabel = createLabelSprite('태양계 (우리의 위치)', { height: 7 })
   sunLabel.position.set(0, 9, 0)
   sunMarker.add(sunLabel)
 
   let isOpen = false
+  let lastFrameTime = 0
 
   function resize() {
     if (!isOpen) return
@@ -78,8 +84,12 @@ export function createGalaxy3DView(): () => void {
   }
   window.addEventListener('resize', resize)
 
-  function animate() {
+  function animate(time: number) {
     if (!isOpen) return
+    // Cap the step so a backgrounded tab doesn't jump the galaxy forward on return.
+    const dt = Math.min((time - lastFrameTime) / 1000, 0.1)
+    lastFrameTime = time
+    galaxy.rotation.y += SPIN_SPEED * dt
     controls.update()
     renderer.render(scene, camera)
     requestAnimationFrame(animate)
@@ -90,6 +100,7 @@ export function createGalaxy3DView(): () => void {
     isOpen = true
     overlay.classList.add('visible')
     resize()
+    lastFrameTime = performance.now()
     requestAnimationFrame(animate)
   }
 
