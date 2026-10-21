@@ -9,22 +9,27 @@ interface PlanetElements {
   periodDays: number
   eccentricity: number
   inclinationDeg: number
+  meanLongitudeDeg: number // at J2000
+  perihelionLongitudeDeg: number
 }
 
 // Standard textbook orbital elements - not pulled from the engine (its
 // Kepler elements are internal to the C core and aren't exposed to JS), and
 // not needed to be more precise than this for an educational orrery.
+// Longitudes are J2000 (JPL/Standish), so the view opens on today's real
+// layout; periods are given precisely enough that Mercury drifts < 1 deg
+// over decades.
 // Textures: Solar System Scope (solarsystemscope.com), CC BY 4.0 - see
 // README.md License section.
 const PLANETS: PlanetElements[] = [
-  { label: '수성', textureFile: '2k_mercury.jpg', orbitAu: 0.387, periodDays: 88, eccentricity: 0.206, inclinationDeg: 7.0 },
-  { label: '금성', textureFile: '2k_venus_surface.jpg', orbitAu: 0.723, periodDays: 225, eccentricity: 0.007, inclinationDeg: 3.4 },
-  { label: '지구', textureFile: '2k_earth_daymap.jpg', orbitAu: 1.0, periodDays: 365.25, eccentricity: 0.017, inclinationDeg: 0.0 },
-  { label: '화성', textureFile: '2k_mars.jpg', orbitAu: 1.524, periodDays: 687, eccentricity: 0.093, inclinationDeg: 1.9 },
-  { label: '목성', textureFile: '2k_jupiter.jpg', orbitAu: 5.203, periodDays: 4333, eccentricity: 0.049, inclinationDeg: 1.3 },
-  { label: '토성', textureFile: '2k_saturn.jpg', orbitAu: 9.537, periodDays: 10759, eccentricity: 0.057, inclinationDeg: 2.5 },
-  { label: '천왕성', textureFile: '2k_uranus.jpg', orbitAu: 19.19, periodDays: 30687, eccentricity: 0.046, inclinationDeg: 0.8 },
-  { label: '해왕성', textureFile: '2k_neptune.jpg', orbitAu: 30.07, periodDays: 60190, eccentricity: 0.011, inclinationDeg: 1.8 },
+  { label: '수성', textureFile: '2k_mercury.jpg', orbitAu: 0.387, periodDays: 87.969, eccentricity: 0.206, inclinationDeg: 7.0, meanLongitudeDeg: 252.25, perihelionLongitudeDeg: 77.46 },
+  { label: '금성', textureFile: '2k_venus_surface.jpg', orbitAu: 0.723, periodDays: 224.701, eccentricity: 0.007, inclinationDeg: 3.4, meanLongitudeDeg: 181.98, perihelionLongitudeDeg: 131.6 },
+  { label: '지구', textureFile: '2k_earth_daymap.jpg', orbitAu: 1.0, periodDays: 365.256, eccentricity: 0.017, inclinationDeg: 0.0, meanLongitudeDeg: 100.46, perihelionLongitudeDeg: 102.94 },
+  { label: '화성', textureFile: '2k_mars.jpg', orbitAu: 1.524, periodDays: 686.98, eccentricity: 0.093, inclinationDeg: 1.9, meanLongitudeDeg: 355.45, perihelionLongitudeDeg: 336.06 },
+  { label: '목성', textureFile: '2k_jupiter.jpg', orbitAu: 5.203, periodDays: 4332.59, eccentricity: 0.049, inclinationDeg: 1.3, meanLongitudeDeg: 34.4, perihelionLongitudeDeg: 14.73 },
+  { label: '토성', textureFile: '2k_saturn.jpg', orbitAu: 9.537, periodDays: 10759.22, eccentricity: 0.057, inclinationDeg: 2.5, meanLongitudeDeg: 49.95, perihelionLongitudeDeg: 92.6 },
+  { label: '천왕성', textureFile: '2k_uranus.jpg', orbitAu: 19.19, periodDays: 30685.4, eccentricity: 0.046, inclinationDeg: 0.8, meanLongitudeDeg: 313.24, perihelionLongitudeDeg: 170.95 },
+  { label: '해왕성', textureFile: '2k_neptune.jpg', orbitAu: 30.07, periodDays: 60189, eccentricity: 0.011, inclinationDeg: 1.8, meanLongitudeDeg: 304.88, perihelionLongitudeDeg: 44.96 },
 ]
 
 // Real AU distances would make the inner planets invisible next to
@@ -41,6 +46,8 @@ function planetVisualRadius(index: number): number {
 }
 
 const TIME_SCALE_DAYS_PER_SECOND = 20 // Mercury's ~88-day orbit completes in a few seconds
+const J2000_MS = Date.UTC(2000, 0, 1, 12)
+const DEG = Math.PI / 180
 
 // Kepler's equation M = E - e*sin(E) has no closed form - Newton-Raphson
 // converges to machine precision in a handful of iterations for e < 0.3
@@ -63,15 +70,17 @@ function pointAtEccentricAnomaly(planet: PlanetElements, eccentricAnomaly: numbe
   const a = orbitVisualRadius(planet.orbitAu)
   const b = a * Math.sqrt(1 - planet.eccentricity * planet.eccentricity)
   return new THREE.Vector2(a * (Math.cos(eccentricAnomaly) - planet.eccentricity), b * Math.sin(eccentricAnomaly))
+    .rotateAround(new THREE.Vector2(), planet.perihelionLongitudeDeg * DEG)
 }
 
-// Tilts an orbital-plane point into the scene's 3D space by inclination,
-// via the exact same rotation applied to that planet's orbit-line mesh
-// (see `orbitLine.rotation.x` below), so the planet mesh and its drawn
-// orbit can never visually diverge.
+// Tilts an orbital-plane point into the scene's 3D space by inclination.
+// Both the orbit line and the moving planet go through this, so the two
+// can never visually diverge. Orbital-plane +y maps to world -z so that,
+// seen from the camera above (+y), orbits run counter-clockwise - as they
+// do seen from the north ecliptic pole.
 function tiltToWorld(planar: THREE.Vector2, inclinationDeg: number): THREE.Vector3 {
   const tilt = (inclinationDeg * Math.PI) / 180
-  return new THREE.Vector3(planar.x, planar.y, 0).applyAxisAngle(new THREE.Vector3(1, 0, 0), Math.PI / 2 + tilt)
+  return new THREE.Vector3(planar.x, planar.y, 0).applyAxisAngle(new THREE.Vector3(1, 0, 0), -(Math.PI / 2 + tilt))
 }
 
 function loadPlanetTexture(loader: THREE.TextureLoader, file: string): THREE.Texture {
@@ -165,7 +174,8 @@ export function createSolarSystem3DView(): () => void {
     for (const child of scene.children) {
       const planet: PlanetElements | undefined = (child as any).userData?.planet
       if (!planet) continue
-      const meanAnomaly = (2 * Math.PI * simulatedDays) / planet.periodDays
+      const meanAnomaly =
+        (planet.meanLongitudeDeg - planet.perihelionLongitudeDeg) * DEG + (2 * Math.PI * simulatedDays) / planet.periodDays
       const eccentricAnomaly = solveEccentricAnomaly(meanAnomaly, planet.eccentricity)
       child.position.copy(tiltToWorld(pointAtEccentricAnomaly(planet, eccentricAnomaly), planet.inclinationDeg))
     }
@@ -181,6 +191,7 @@ export function createSolarSystem3DView(): () => void {
     overlay.classList.add('visible')
     resize()
     lastFrameMs = 0
+    simulatedDays = (Date.now() - J2000_MS) / 86_400_000
     requestAnimationFrame(animate)
   }
 
