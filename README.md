@@ -154,3 +154,8 @@ corresponding source available to users, including this project's own code, per 
 `public/fonts/NotoSansKR-Variable.ttf` (Google's Noto Sans KR, from the
 [google/fonts](https://github.com/google/fonts/tree/main/ofl/notosanskr) repo) is
 **SIL Open Font License 1.1** — see `public/fonts/NotoSansKR-OFL.txt`.
+
+`public/textures/planets/*.jpg` (Sun/planet surface textures used by the 3D solar
+system view, `src/solar-system-3d.ts`) are from
+[Solar System Scope](https://www.solarsystemscope.com/textures/), **CC BY 4.0**
+— attribution: Solar System Scope (solarsystemscope.com).

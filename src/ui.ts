@@ -6,17 +6,15 @@ interface ToggleSpec {
   attr: string
 }
 
+// 별/은하수/성운·은하/DSS 사진은 토글 없이 엔진 기본값 그대로 표시한다
+// (main.ts의 addDataSource만으로 켜짐/꺼짐이 정해짐).
 const TOGGLES: ToggleSpec[] = [
-  { label: 'Stars', getObj: (s) => s.core.stars, attr: 'visible' },
-  { label: 'Milky Way', getObj: (s) => s.core.milkyway, attr: 'visible' },
-  { label: 'Constellations', getObj: (s) => s.core.constellations, attr: 'lines_visible' },
-  { label: 'Constellation Art', getObj: (s) => s.core.constellations, attr: 'images_visible' },
-  { label: 'Nebulae', getObj: (s) => s.core.dsos, attr: 'visible' },
-  { label: 'Atmosphere', getObj: (s) => s.core.atmosphere, attr: 'visible' },
-  { label: 'Landscape', getObj: (s) => s.core.landscapes, attr: 'visible' },
-  { label: 'Equatorial Grid', getObj: (s) => s.core.lines.equatorial, attr: 'visible' },
-  { label: 'Azimuthal Grid', getObj: (s) => s.core.lines.azimuthal, attr: 'visible' },
-  { label: 'DSS Photos', getObj: (s) => s.core.dss, attr: 'visible' },
+  { label: '별자리', getObj: (s) => s.core.constellations, attr: 'lines_visible' },
+  { label: '별자리 그림', getObj: (s) => s.core.constellations, attr: 'images_visible' },
+  { label: '대기', getObj: (s) => s.core.atmosphere, attr: 'visible' },
+  { label: '풍경', getObj: (s) => s.core.landscapes, attr: 'visible' },
+  { label: '적도 좌표망', getObj: (s) => s.core.lines.equatorial, attr: 'visible' },
+  { label: '지평 좌표망', getObj: (s) => s.core.lines.azimuthal, attr: 'visible' },
 ]
 
 export function createToolbar(stel: StelInstance): HTMLDivElement {

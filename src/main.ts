@@ -3,6 +3,8 @@ import { initStelEngine } from './engine'
 import { initObserverLocation } from './location'
 import { createToolbar } from './ui'
 import { createSelectionPanel } from './selection-panel'
+import { createObjectSearch } from './object-search'
+import { createSolarSystem3DView } from './solar-system-3d'
 import { loadKoDict, ko } from './i18n'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -32,11 +34,11 @@ const PLANET_SURVEYS: Record<string, string> = {
 }
 
 async function main() {
-  // Needed synchronously by translateFn below, so load it before the engine
-  // starts calling that function to label things on screen.
-  await loadKoDict()
-
-  const stel = await initStelEngine(canvas, (_domain, str) => ko(str))
+  // loadKoDict() and initStelEngine() don't depend on each other - the
+  // engine only calls translateFn once it actually needs to render a label,
+  // well after both of these resolve - so run them concurrently instead of
+  // stacking a dict fetch in front of the much longer WASM load.
+  const [, stel] = await Promise.all([loadKoDict(), initStelEngine(canvas, (_domain, str) => ko(str))])
   console.log('Stellarium Web Engine ready', stel)
 
   // The engine's built-in font is a heavily subset Latin-only NotoSans, so
@@ -74,10 +76,17 @@ async function main() {
   // Real time, flowing forward, from the browser's actual location.
   core.observer.utc = stel.date2MJD(new Date())
   core.time_speed = 1
-  await initObserverLocation(stel)
 
   createToolbar(stel)
   createSelectionPanel(stel)
+  const openSolarSystemIfSunSelected = createSolarSystem3DView(stel)
+  createObjectSearch(stel, openSolarSystemIfSunSelected)
+  document.querySelector('#loading-indicator')?.remove()
+
+  // Not awaited: the toolbar/panel don't depend on the observer's location,
+  // and initObserverLocation() always resolves on its own (success or not)
+  // without anything else in main() waiting on it.
+  initObserverLocation(stel)
 
   // Space centers and smoothly locks the view on whatever is selected
   // (clicking an object on the canvas sets core.selection automatically).

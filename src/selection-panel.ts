@@ -35,6 +35,19 @@ function bvToColor(bv: number): string {
   return 'rgb(255,255,255)'
 }
 
+// M = m - 5*log10(d_pc) + 5, d_pc from the AU distance already read off the
+// object (1 pc = 206264.8 AU).
+function absoluteMagnitude(vmag: number, distanceAu: number): number {
+  const distancePc = distanceAu / 206264.8
+  return vmag - 5 * Math.log10(distancePc) + 5
+}
+
+// Ballesteros' formula (B-V -> effective temperature), a standard
+// closed-form approximation - valid roughly for -0.4 < bv < 2.
+function temperatureFromBV(bv: number): number {
+  return 4600 * (1 / (0.92 * bv + 1.7) + 1 / (0.92 * bv + 0.62))
+}
+
 // obj.path isn't populated for most individual sky objects (only for
 // modules), so infer the kind from the shape of its jsonData instead -
 // each klass's get_json_data() fills in different fields.
@@ -74,6 +87,11 @@ export function createSelectionPanel(stel: StelInstance): void {
     const distanceAu = obj.getInfo('distance')
     const data = obj.jsonData
     const md = data && data.model_data
+    // getInfo('distance') also returns a (heliocentric/geocentric) value for
+    // planets, but the inverse-square absolute-magnitude formula below only
+    // means anything for a self-luminous star - gate it on the same
+    // BVMag/spect_t signal describeType() uses to mean "this is a star".
+    const isStar = !!md && (typeof md.BVMag === 'number' || typeof md.spect_t === 'string')
 
     let rows = row('종류', describeType(obj))
     if (typeof vmag === 'number' && isFinite(vmag)) {
@@ -81,6 +99,12 @@ export function createSelectionPanel(stel: StelInstance): void {
     }
     if (typeof distanceAu === 'number' && isFinite(distanceAu)) {
       rows += row('거리', formatDistance(distanceAu))
+      if (isStar && typeof vmag === 'number' && isFinite(vmag)) {
+        rows += row('절대 등급', absoluteMagnitude(vmag, distanceAu).toFixed(2))
+      }
+    }
+    if (md && typeof md.plx === 'number' && isFinite(md.plx) && md.plx > 0) {
+      rows += row('연주시차', `${md.plx.toFixed(2)} mas`)
     }
     if (md && typeof md.spect_t === 'string' && md.spect_t) {
       rows += row('분광형', md.spect_t)
@@ -91,6 +115,7 @@ export function createSelectionPanel(stel: StelInstance): void {
         `색지수 (B-V ${md.BVMag.toFixed(2)})`,
         `<span class="swatch" style="background:${color}"></span>`,
       )
+      rows += row('표면온도', `약 ${Math.round(temperatureFromBV(md.BVMag))} K`)
     }
     if (md && typeof md.morpho === 'string' && md.morpho) {
       rows += row('형태 분류', md.morpho)
