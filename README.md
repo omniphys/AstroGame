@@ -159,3 +159,11 @@ corresponding source available to users, including this project's own code, per 
 system view, `src/solar-system-3d.ts`) are from
 [Solar System Scope](https://www.solarsystemscope.com/textures/), **CC BY 4.0**
 — attribution: Solar System Scope (solarsystemscope.com).
+
+`public/textures/milkyway_gaia.jpg` (face-on Milky Way illustration used by the 3D
+galaxy view, `src/galaxy-3d.ts`) is cropped and retouched (the original's "YOU ARE
+HERE" callout removed via a point-symmetric clone-patch, to make room for our own
+marker/label) from ESA's
+["You are here"](https://esa.int/ESA_Multimedia/Images/2022/06/You_are_here) (2022),
+**CC BY-SA 3.0 IGO** — credit: ESA/Gaia/DPAC, S. Payne-Wardenaar. Per the ShareAlike
+term, this derivative crop is likewise CC BY-SA 3.0 IGO.

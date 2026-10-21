@@ -1,6 +1,6 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
-import type { StelInstance } from './engine'
+import { createLabelSprite } from './label-sprite'
 
 interface PlanetElements {
   label: string
@@ -80,28 +80,7 @@ function loadPlanetTexture(loader: THREE.TextureLoader, file: string): THREE.Tex
   return texture
 }
 
-function createLabelSprite(text: string): THREE.Sprite {
-  const canvas = document.createElement('canvas')
-  const ctx = canvas.getContext('2d')!
-  const fontSize = 48
-  ctx.font = `${fontSize}px sans-serif`
-  canvas.width = Math.ceil(ctx.measureText(text).width) + 24
-  canvas.height = Math.ceil(fontSize * 1.5)
-  // measureText above needed the context sized first; font resets on resize.
-  ctx.font = `${fontSize}px sans-serif`
-  ctx.fillStyle = 'rgba(255, 255, 255, 0.95)'
-  ctx.textBaseline = 'middle'
-  ctx.fillText(text, 12, canvas.height / 2)
-
-  const texture = new THREE.CanvasTexture(canvas)
-  const material = new THREE.SpriteMaterial({ map: texture, depthTest: false, depthWrite: false, transparent: true })
-  const sprite = new THREE.Sprite(material)
-  const spriteHeight = 5
-  sprite.scale.set((spriteHeight * canvas.width) / canvas.height, spriteHeight, 1)
-  return sprite
-}
-
-export function createSolarSystem3DView(stel: StelInstance): () => void {
+export function createSolarSystem3DView(): () => void {
   const overlay = document.createElement('div')
   overlay.id = 'solar-system-overlay'
 
@@ -212,24 +191,5 @@ export function createSolarSystem3DView(stel: StelInstance): () => void {
 
   closeButton.addEventListener('click', close)
 
-  // The engine's `core.selection` setter is a no-op when assigned the value
-  // it already holds (confirmed live: it also silently ignores null/
-  // undefined, so there's no way to "clear" it to force the next identical
-  // pick to register as a change) - re-picking the Sun while it's already
-  // the selection fires no 'selection' change event at all. So this check
-  // is exposed and called directly by anything that sets core.selection
-  // (object-search.ts), rather than relying solely on the change event.
-  function openIfSunSelected() {
-    const sel = stel.core.selection
-    if (!sel) return
-    const designation = (sel.designations && sel.designations()[0]) || sel.id
-    if (designation === 'NAME Sun') open()
-  }
-
-  stel.change((obj: any, attr: string) => {
-    if (attr !== 'selection' || obj.path !== 'core') return
-    openIfSunSelected()
-  })
-
-  return openIfSunSelected
+  return open
 }

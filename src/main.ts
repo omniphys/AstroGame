@@ -5,6 +5,8 @@ import { createToolbar } from './ui'
 import { createSelectionPanel } from './selection-panel'
 import { createObjectSearch } from './object-search'
 import { createSolarSystem3DView } from './solar-system-3d'
+import { createGalaxy3DView } from './galaxy-3d'
+import { createViewButtons } from './view-buttons'
 import { loadKoDict, ko } from './i18n'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -79,8 +81,10 @@ async function main() {
 
   createToolbar(stel)
   createSelectionPanel(stel)
-  const openSolarSystemIfSunSelected = createSolarSystem3DView(stel)
-  createObjectSearch(stel, openSolarSystemIfSunSelected)
+  createObjectSearch(stel)
+  const openSolarSystem = createSolarSystem3DView()
+  const openGalaxy = createGalaxy3DView()
+  createViewButtons(openSolarSystem, openGalaxy)
   document.querySelector('#loading-indicator')?.remove()
 
   // Not awaited: the toolbar/panel don't depend on the observer's location,

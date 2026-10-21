@@ -21,6 +21,10 @@ const CURATED_OBJECTS: CuratedObject[] = [
   { label: '토성', designation: 'NAME Saturn' },
   { label: '천왕성', designation: 'NAME Uranus' },
   { label: '해왕성', designation: 'NAME Neptune' },
+  // 은하수 자체는 선택 가능한 카탈로그 천체가 아니라서(엔진이 그냥 하늘 전체
+  // 배경 텍스처로만 다룸 - core.selection에 대입하면 WASM에서 바로 크래시남,
+  // 실측함) 은하수가 가장 짙게 보이는 궁수자리 방향으로 대신 이동시킨다.
+  { label: '은하수 (궁수자리 방향)', designation: 'CON western Sgr' },
   { label: '시리우스', designation: '* alf CMa' },
   { label: '북극성', designation: '* alf UMi' },
   { label: '베가', designation: '* alf Lyr' },
@@ -39,7 +43,7 @@ const CURATED_OBJECTS: CuratedObject[] = [
   { label: '마녀머리 성운 (IC 2118)', designation: 'IC 2118' },
 ]
 
-export function createObjectSearch(stel: StelInstance, onSelectionSet?: () => void): HTMLDivElement {
+export function createObjectSearch(stel: StelInstance): HTMLDivElement {
   const wrapper = document.createElement('div')
   wrapper.id = 'object-search'
 
@@ -79,11 +83,6 @@ export function createObjectSearch(stel: StelInstance, onSelectionSet?: () => vo
     // select it (drives selection-panel.ts) and center+lock the view on it.
     stel.core.selection = obj
     stel.pointAndLock(obj, 1.0)
-    // core.selection's setter is a no-op if the value doesn't change (e.g.
-    // re-picking the Sun while it's already selected), so no 'selection'
-    // change event fires in that case - let the caller re-check directly
-    // rather than relying on that event alone.
-    onSelectionSet?.()
   })
 
   wrapper.appendChild(select)
