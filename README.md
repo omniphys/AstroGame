@@ -167,3 +167,17 @@ marker/label) from ESA's
 ["You are here"](https://esa.int/ESA_Multimedia/Images/2022/06/You_are_here) (2022),
 **CC BY-SA 3.0 IGO** — credit: ESA/Gaia/DPAC, S. Payne-Wardenaar. Per the ShareAlike
 term, this derivative crop is likewise CC BY-SA 3.0 IGO.
+
+`public/photos/*.jpg` (real telescope photos shown by the 천체 촬영 모드 photography
+mini-game, `src/photo-mode.ts`/`src/photo-popup.ts`, one per `src/photo-subjects.ts`
+entry) are from, per-file credit also shown in the app itself:
+- **NASA** (SDO, LRO, MESSENGER, Mariner 10, Viking, Voyager 2, Cassini, JWST, Hubble
+  Heritage Team, WISE) — **public domain** (U.S. government work).
+- **ESA/Hubble** (esahubble.org releases heic0516a, opo0602a, potw1635a, heic1502a,
+  potw1514a, heic0105a) — **CC BY 4.0**.
+- **STScI Digitized Sky Survey** cutouts (폴룩스, 데네브 — no dedicated professional
+  release exists for either star) — public domain archival survey data, via
+  `archive.stsci.edu`.
+- The Sun image is a fixed 2010 SDO/AIA frame via Wikimedia Commons (not NASA's
+  "latest" live feed, which changes daily and wouldn't be a stable, reproducible
+  asset for this repo).

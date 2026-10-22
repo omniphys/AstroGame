@@ -7,6 +7,8 @@ import { createObjectSearch } from './object-search'
 import { createSolarSystem3DView } from './solar-system-3d'
 import { createGalaxy3DView } from './galaxy-3d'
 import { createViewButtons } from './view-buttons'
+import { createPhotoMode } from './photo-mode'
+import { createExplorationMode } from './exploration-mode'
 import { loadKoDict, ko } from './i18n'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -85,6 +87,8 @@ async function main() {
   const openSolarSystem = createSolarSystem3DView()
   const openGalaxy = createGalaxy3DView()
   createViewButtons(openSolarSystem, openGalaxy)
+  createPhotoMode(stel)
+  createExplorationMode(stel)
   document.querySelector('#loading-indicator')?.remove()
 
   // Not awaited: the toolbar/panel don't depend on the observer's location,
