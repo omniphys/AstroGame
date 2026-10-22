@@ -52,7 +52,7 @@ export function createObjectSearch(stel: StelInstance): HTMLDivElement {
 
   const placeholder = document.createElement('option')
   placeholder.value = ''
-  placeholder.textContent = '천체 검색…'
+  placeholder.textContent = '🔭 천체 선택…'
   placeholder.disabled = true
   placeholder.selected = true
   select.appendChild(placeholder)

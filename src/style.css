@@ -56,7 +56,7 @@ body,
 #selection-panel {
   display: none;
   position: fixed;
-  top: 16px;
+  top: 64px; /* 우측 상단의 소리 켜기/끄기 버튼 아래 */
   right: 16px;
   width: 220px;
   padding: 12px 14px;
@@ -125,14 +125,32 @@ body,
 }
 
 .object-search-select {
-  padding: 8px 14px;
+  padding: 9px 16px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(20, 20, 30, 0.6);
-  color: rgba(255, 255, 255, 0.85);
-  font-size: 13px;
+  border: 1px solid rgba(110, 220, 255, 0.85);
+  background: linear-gradient(135deg, rgba(20, 70, 110, 0.85), rgba(25, 30, 70, 0.85));
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(6px);
+  box-shadow: 0 0 12px rgba(90, 200, 255, 0.35);
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+
+.object-search-select:hover,
+.object-search-select:focus {
+  outline: none;
+  border-color: rgba(150, 235, 255, 1);
+  box-shadow: 0 0 18px rgba(90, 200, 255, 0.6);
+}
+
+/* 펼쳐지는 목록은 OS 기본 스타일이라 배경이 흰색일 수 있어서, 흰 글자가
+   안 보이지 않도록 목록 항목 색을 따로 지정. */
+.object-search-select option {
+  background: #14182a;
+  color: #fff;
+  font-weight: 400;
 }
 
 .object-search-hint {
@@ -147,7 +165,8 @@ body,
   left: 16px;
   z-index: 10;
   display: flex;
-  gap: 6px;
+  align-items: center;
+  gap: 8px;
 }
 
 .view-button {
@@ -165,6 +184,61 @@ body,
 .view-button:hover {
   background: rgba(120, 170, 255, 0.25);
   border-color: rgba(140, 190, 255, 0.8);
+}
+
+.view-button-solar {
+  border-color: rgba(255, 190, 90, 0.7);
+  background: rgba(90, 50, 10, 0.55);
+}
+
+.view-button-solar:hover {
+  background: rgba(255, 170, 60, 0.3);
+  border-color: rgba(255, 210, 120, 1);
+}
+
+.view-button-galaxy {
+  border-color: rgba(190, 150, 255, 0.7);
+  background: rgba(55, 30, 95, 0.55);
+}
+
+.view-button-galaxy:hover {
+  background: rgba(170, 120, 255, 0.3);
+  border-color: rgba(215, 185, 255, 1);
+}
+
+/* 게임의 핵심 진입점이라 다른 버튼보다 크고, 둥근 사각형 + 그라데이션 +
+   은은하게 숨쉬는 빛으로 강조. 색은 발사 기지/관제실 느낌 - 짙은 강철빛
+   남색 위에 엔진 불꽃 같은 호박색 테두리와 빛. */
+.exploration-button {
+  padding: 11px 20px;
+  border-radius: 12px;
+  border: 1.5px solid #ffb547;
+  background: linear-gradient(160deg, #2f5d8a, #16304f 60%, #0d1c30);
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
+  animation: exploration-glow 2.4s ease-in-out infinite;
+  transition: transform 0.15s, filter 0.15s;
+}
+
+.exploration-button:hover {
+  transform: translateY(-1px) scale(1.04);
+  filter: brightness(1.12);
+}
+
+@keyframes exploration-glow {
+  0%, 100% { box-shadow: 0 0 8px rgba(255, 170, 60, 0.4); }
+  50% { box-shadow: 0 0 20px rgba(255, 170, 60, 0.85); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .exploration-button {
+    animation: none;
+    box-shadow: 0 0 12px rgba(255, 170, 60, 0.6);
+  }
 }
 
 #solar-system-overlay {
@@ -249,17 +323,13 @@ body,
 
 /* --- 천체 촬영 모드 --- */
 
+/* 모양은 탐사 기지의 포인트 카드(.stat-chip.stat-points)를 그대로 씀. */
 #points-badge {
   position: fixed;
   bottom: 16px;
   right: 16px;
   z-index: 10;
-  padding: 8px 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(20, 20, 30, 0.6);
-  color: #fff;
-  font-size: 13px;
+  min-width: 0;
   backdrop-filter: blur(6px);
 }
 
@@ -501,12 +571,65 @@ body,
 
 .exploration-header {
   display: flex;
-  gap: 20px;
+  gap: 12px;
   flex-wrap: wrap;
-  font-size: 14px;
-  font-weight: 600;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
   padding-right: 32px;
+}
+
+.stat-chip {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-width: 180px;
+  padding: 10px 18px 10px 14px;
+  border-radius: 12px;
+  border: 1.5px solid;
+}
+
+.stat-icon {
+  font-size: 30px;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.2;
+  color: #fff;
+}
+
+.stat-unit {
+  margin-left: 3px;
+  font-size: 14px;
+  font-weight: 700;
+  opacity: 0.8;
+}
+
+.stat-sub {
+  font-size: 11px;
+  opacity: 0.7;
+}
+
+.stat-points {
+  border-color: rgba(255, 200, 80, 0.85);
+  background: linear-gradient(135deg, rgba(120, 85, 10, 0.55), rgba(60, 40, 5, 0.4));
+  color: #ffd772;
+  box-shadow: 0 0 14px rgba(255, 190, 60, 0.25);
+}
+
+.stat-rank {
+  border-color: rgba(140, 200, 255, 0.85);
+  background: linear-gradient(135deg, rgba(30, 70, 120, 0.55), rgba(15, 30, 60, 0.4));
+  color: #a9d8ff;
+  box-shadow: 0 0 14px rgba(110, 180, 255, 0.25);
 }
 
 .exploration-body {
@@ -617,6 +740,20 @@ body,
 
 #mission-flight-overlay.visible {
   display: flex;
+}
+
+.sound-toggle {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+  padding: 8px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  background: rgba(20, 20, 30, 0.6);
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 13px;
+  cursor: pointer;
 }
 
 .mission-track {

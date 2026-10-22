@@ -2,51 +2,25 @@ import type { StelInstance } from './engine'
 import { PHOTO_SUBJECTS } from './photo-subjects'
 import { createPhotoPopup } from './photo-popup'
 import { getPoints } from './points'
+import { playShutter } from './sound'
 
 // How close the player needs to be zoomed in (field of view, radians)
 // before the capture button appears. Tuned by feel, not a physical constant.
 const CAPTURE_FOV_THRESHOLD_DEG = 5
 
-// A synthesized camera-shutter "click" (filtered noise burst) instead of a
-// bundled audio file - no asset to source/license, and it's tiny.
-function playShutterSound() {
-  const AudioContextCtor = window.AudioContext || (window as any).webkitAudioContext
-  if (!AudioContextCtor) return
-  const ctx = new AudioContextCtor()
-
-  const duration = 0.08
-  const bufferSize = Math.floor(ctx.sampleRate * duration)
-  const buffer = ctx.createBuffer(1, bufferSize, ctx.sampleRate)
-  const data = buffer.getChannelData(0)
-  for (let i = 0; i < bufferSize; i++) {
-    // Sharp decay envelope over white noise = a dry "click" rather than a hiss.
-    data[i] = (Math.random() * 2 - 1) * (1 - i / bufferSize) ** 2
-  }
-
-  const noise = ctx.createBufferSource()
-  noise.buffer = buffer
-
-  const filter = ctx.createBiquadFilter()
-  filter.type = 'highpass'
-  filter.frequency.value = 2000
-
-  const gain = ctx.createGain()
-  gain.gain.value = 0.5
-
-  noise.connect(filter)
-  filter.connect(gain)
-  gain.connect(ctx.destination)
-  noise.start()
-  noise.stop(ctx.currentTime + duration)
-  noise.onended = () => ctx.close()
-}
-
 export function createPhotoMode(stel: StelInstance): void {
   const pointsBadge = document.createElement('div')
   pointsBadge.id = 'points-badge'
+  pointsBadge.className = 'stat-chip stat-points'
   document.body.appendChild(pointsBadge)
   function renderPoints(points: number) {
-    pointsBadge.textContent = `📷 ${points} 포인트`
+    pointsBadge.innerHTML = `
+      <span class="stat-icon">💰</span>
+      <div>
+        <div class="stat-label">보유 포인트</div>
+        <div class="stat-value">${points}<span class="stat-unit">P</span></div>
+      </div>
+    `
   }
   renderPoints(getPoints())
 
@@ -86,7 +60,7 @@ export function createPhotoMode(stel: StelInstance): void {
     if (!currentSubject) return
     const subject = currentSubject
 
-    playShutterSound()
+    playShutter()
     canvas.classList.add('capturing')
     flash.classList.add('flashing')
     setTimeout(() => {

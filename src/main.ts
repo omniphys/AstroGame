@@ -9,6 +9,7 @@ import { createGalaxy3DView } from './galaxy-3d'
 import { createViewButtons } from './view-buttons'
 import { createPhotoMode } from './photo-mode'
 import { createExplorationMode } from './exploration-mode'
+import { createSoundToggle, installButtonClickSound } from './sound'
 import { loadKoDict, ko } from './i18n'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -89,6 +90,8 @@ async function main() {
   createViewButtons(openSolarSystem, openGalaxy)
   createPhotoMode(stel)
   createExplorationMode(stel)
+  document.body.appendChild(createSoundToggle('sound-toggle'))
+  installButtonClickSound()
   document.querySelector('#loading-indicator')?.remove()
 
   // Not awaited: the toolbar/panel don't depend on the observer's location,

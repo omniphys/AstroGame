@@ -2,6 +2,7 @@ import type { StelInstance } from './engine'
 import { MISSION_PHASES, MISSION_FAILURE_REASONS, PROBE_TIERS, SHIP_TIERS, EARTH_GLOBE_TEXTURE_FILE } from './exploration-data'
 import { PHOTO_SUBJECTS } from './photo-subjects'
 import { getMissionSuccessChance, exploreTarget, getProbeTier } from './exploration-state'
+import { createSoundToggle, playLaunchSound, playMissionMusic, playMissionSuccess, playMissionFailure } from './sound'
 
 const LAUNCH_DURATION_MS = 1_200 // 지구 옆에서 분사하며 이륙 준비하는 시간
 // 우주선이 목표까지 거리의 90%에 도달할 때까지 걸리는 시간, 그리고 탐사선이
@@ -53,6 +54,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
   const planetMarker = flightOverlay.querySelector<HTMLImageElement>('.mission-planet-marker')!
   const statusEl = flightOverlay.querySelector<HTMLDivElement>('.mission-status')!
   const progressFill = flightOverlay.querySelector<HTMLDivElement>('.mission-progress-fill')!
+  flightOverlay.appendChild(createSoundToggle('sound-toggle'))
 
   function showReveal(html: string) {
     revealOverlay.innerHTML = `<div id="mission-reveal-card">${html}<button id="mission-reveal-close">확인</button></div>`
@@ -67,6 +69,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
     const succeeded = Math.random() < getMissionSuccessChance(designation)
 
     if (!succeeded) {
+      playMissionFailure()
       const reason = MISSION_FAILURE_REASONS[Math.floor(Math.random() * MISSION_FAILURE_REASONS.length)]
       showReveal(`
         <h2>🚨 탐사 실패</h2>
@@ -76,6 +79,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
       return
     }
 
+    playMissionSuccess()
     const awarded = exploreTarget(designation, crewed)
     const obj = stel.getObj(designation)
     if (obj) {
@@ -133,6 +137,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
 
     // 1단계: 발사 - 우주선은 그 자리에, 바닥에서 가스를 분사하며 이륙을 준비.
     exhaustEl.classList.add('igniting')
+    playLaunchSound(LAUNCH_DURATION_MS)
 
     setTimeout(() => {
       // 2단계: 이륙 - 분사 이펙트가 꺼지고 본격적인 항행이 시작됨. 문구도 바로
@@ -140,6 +145,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
       // 남아있는 일이 없도록.
       exhaustEl.classList.remove('igniting')
       statusEl.textContent = MISSION_PHASES[1]
+      playMissionMusic(FLIGHT_DURATION_MS, SHIP_TRAVEL_MS)
 
       shipImg.style.transition = `left ${SHIP_TRAVEL_MS}ms linear`
       shipImg.style.left = `${SEPARATION_LEFT}%`

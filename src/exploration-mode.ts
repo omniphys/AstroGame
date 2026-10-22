@@ -13,6 +13,12 @@ import {
 } from './exploration-state'
 import { createMissionRunner } from './exploration-mission'
 import { getPoints } from './points'
+import { playPurchase, playDenied } from './sound'
+
+function playPurchaseResult(bought: boolean) {
+  if (bought) playPurchase()
+  else playDenied()
+}
 
 function itemCardHtml(opts: {
   imageFile: string
@@ -36,8 +42,8 @@ function itemCardHtml(opts: {
 
 export function createExplorationMode(stel: StelInstance): void {
   const button = document.createElement('button')
-  button.className = 'view-button'
-  button.textContent = '탐사 기지'
+  button.className = 'exploration-button'
+  button.textContent = '🚀 탐사 기지'
   document.querySelector('#view-buttons')?.appendChild(button)
 
   const overlay = document.createElement('div')
@@ -111,8 +117,21 @@ export function createExplorationMode(stel: StelInstance): void {
       <div id="exploration-panel">
         <button id="exploration-close">✕</button>
         <div class="exploration-header">
-          <div>💰 ${points} 포인트</div>
-          <div>🏅 ${rank} (탐사 점수 ${score})</div>
+          <div class="stat-chip stat-points">
+            <span class="stat-icon">💰</span>
+            <div>
+              <div class="stat-label">보유 포인트</div>
+              <div class="stat-value">${points}<span class="stat-unit">P</span></div>
+            </div>
+          </div>
+          <div class="stat-chip stat-rank">
+            <span class="stat-icon">🏅</span>
+            <div>
+              <div class="stat-label">명예 등급</div>
+              <div class="stat-value">${rank}</div>
+              <div class="stat-sub">탐사 점수 ${score}</div>
+            </div>
+          </div>
         </div>
         <div class="exploration-body">
           <section>
@@ -134,16 +153,16 @@ export function createExplorationMode(stel: StelInstance): void {
 
     overlay.querySelector('#exploration-close')!.addEventListener('click', close)
     overlay.querySelector('[data-action="buy-ship"]')?.addEventListener('click', () => {
-      buyNextShipTier()
+      playPurchaseResult(buyNextShipTier())
       render()
     })
     overlay.querySelector('[data-action="buy-probe"]')?.addEventListener('click', () => {
-      buyNextProbeTier()
+      playPurchaseResult(buyNextProbeTier())
       render()
     })
     overlay.querySelectorAll<HTMLButtonElement>('[data-action="buy-part"]').forEach((btn) => {
       btn.addEventListener('click', () => {
-        buyPart(btn.dataset.part as PartId)
+        playPurchaseResult(buyPart(btn.dataset.part as PartId))
         render()
       })
     })

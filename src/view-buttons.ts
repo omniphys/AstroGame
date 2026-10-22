@@ -6,13 +6,13 @@ export function createViewButtons(openSolarSystem: () => void, openGalaxy: () =>
   wrapper.id = 'view-buttons'
 
   const solarSystemButton = document.createElement('button')
-  solarSystemButton.className = 'view-button'
-  solarSystemButton.textContent = '태양계'
+  solarSystemButton.className = 'view-button view-button-solar'
+  solarSystemButton.textContent = '☀️ 태양계'
   solarSystemButton.addEventListener('click', openSolarSystem)
 
   const galaxyButton = document.createElement('button')
-  galaxyButton.className = 'view-button'
-  galaxyButton.textContent = '우리 은하'
+  galaxyButton.className = 'view-button view-button-galaxy'
+  galaxyButton.textContent = '🌌 우리 은하'
   galaxyButton.addEventListener('click', openGalaxy)
 
   wrapper.appendChild(solarSystemButton)
