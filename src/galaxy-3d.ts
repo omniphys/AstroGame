@@ -9,14 +9,46 @@ import { createLabelSprite } from './label-sprite'
 // "YOU ARE HERE" callout removed (point-symmetric clone-patch) so our own
 // Korean marker/label can be placed on it instead.
 const GALAXY_TEXTURE = '/textures/milkyway_gaia.jpg'
+// The source image has a lot of empty black margin around the actual
+// galaxy (radial brightness sampling put the visible disc's edge at
+// roughly 52% of the frame's half-width) - mapping the full square to
+// GALAXY_RADIUS would put anything placed by a real ly-based ratio (like
+// the Sun, below) out past the visible structure, in that dead margin.
+// Zoom the texture's UVs into just that central 52% so GALAXY_RADIUS
+// actually corresponds to the galaxy's visible edge.
+const GALAXY_TEXTURE_VISIBLE_FRACTION = 0.52
 const GALAXY_RADIUS = 220
 // The Sun sits roughly 8.2 kpc (~27,000 ly) from the galactic center, in a
 // disc whose diameter is commonly put at ~100,000 ly - a scene-unit ratio
 // of 27,000 / 50,000 = 0.54.
 const SUN_DISTANCE_RATIO = 0.54
-const SUN_ANGLE = Math.PI * 0.15 // arbitrary - the texture has no machine-readable arm geometry to align to
+// Arbitrary (the texture has no machine-readable arm geometry to align
+// to) - moved another 15° counter-clockwise (viewed from above, confirmed
+// via camera.project() on test points: increasing this parametric angle
+// moves the marker clockwise on screen, so CCW means decreasing it) per
+// user feedback, from an original 27° placement.
+const SUN_ANGLE = Math.PI * (-3 / 180) // -3°
 // Negative because a positive Y rotation is counter-clockwise when viewed from above.
 const SPIN_SPEED = -0.02 // rad/s, ~5 min per turn
+
+// A radial white->black gradient used as an alpha mask so the disc fades
+// out smoothly into the scene's black background instead of showing a
+// hard circular silhouette. Solid out to 85% of the radius, then fades to
+// fully transparent exactly at the edge (matches CircleGeometry's own UV
+// circle, so there's no visible seam between the two).
+function createEdgeFadeTexture(): THREE.Texture {
+  const size = 512
+  const canvas = document.createElement('canvas')
+  canvas.width = size
+  canvas.height = size
+  const ctx = canvas.getContext('2d')!
+  const gradient = ctx.createRadialGradient(size / 2, size / 2, size * 0.425, size / 2, size / 2, size / 2)
+  gradient.addColorStop(0, 'white')
+  gradient.addColorStop(1, 'black')
+  ctx.fillStyle = gradient
+  ctx.fillRect(0, 0, size, size)
+  return new THREE.CanvasTexture(canvas)
+}
 
 export function createGalaxy3DView(): () => void {
   const overlay = document.createElement('div')
@@ -50,9 +82,16 @@ export function createGalaxy3DView(): () => void {
 
   const galaxyTexture = new THREE.TextureLoader().load(GALAXY_TEXTURE)
   galaxyTexture.colorSpace = THREE.SRGBColorSpace
+  galaxyTexture.repeat.set(GALAXY_TEXTURE_VISIBLE_FRACTION, GALAXY_TEXTURE_VISIBLE_FRACTION)
+  galaxyTexture.offset.set((1 - GALAXY_TEXTURE_VISIBLE_FRACTION) / 2, (1 - GALAXY_TEXTURE_VISIBLE_FRACTION) / 2)
   const galaxyDisc = new THREE.Mesh(
     new THREE.CircleGeometry(GALAXY_RADIUS, 64),
-    new THREE.MeshBasicMaterial({ map: galaxyTexture, transparent: true, side: THREE.DoubleSide }),
+    new THREE.MeshBasicMaterial({
+      map: galaxyTexture,
+      alphaMap: createEdgeFadeTexture(),
+      transparent: true,
+      side: THREE.DoubleSide,
+    }),
   )
   galaxyDisc.rotation.x = -Math.PI / 2
 
