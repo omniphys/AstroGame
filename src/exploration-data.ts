@@ -82,9 +82,10 @@ export const RANK_TITLES: RankTitle[] = [
   { minScore: 400, title: '은하 탐험가' },
 ]
 
-// 10초 비행 애니메이션 동안 번갈아 보여줄 상태 문구. 네 번째 문구가 시작되는
-// 시점에 맞춰 탐사선이 우주선에서 분리되는 연출이 일어남(exploration-mission.ts
-// 의 SEPARATION_PROGRESS가 이 배열 길이에서 index 4/6 지점을 가리킴).
+// 비행 애니메이션 동안 번갈아 보여줄 상태 문구. 탐사선 분리 시점은
+// exploration-mission.ts가 목표까지 거리의 90%(SHIP_TRAVEL_MS 경과 시점) 기준으로
+// 직접 계산하고, 이 문구 배열과는 느슨하게만 맞춰져 있음(정확히 동기화되지 않아도
+// "탐사선 분리" 문구가 뜨는 구간과 실제 분리 시점이 충분히 가까움).
 export const MISSION_PHASES: string[] = [
   '발사 준비 완료 - 카운트다운 시작',
   '발사! 지구 중력권 이탈 중',

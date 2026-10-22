@@ -4,16 +4,28 @@ import { PHOTO_SUBJECTS } from './photo-subjects'
 import { getMissionSuccessChance, exploreTarget, getProbeTier } from './exploration-state'
 
 const LAUNCH_DURATION_MS = 1_200 // 지구 옆에서 분사하며 이륙 준비하는 시간
-const FLIGHT_DURATION_MS = 10_000 // 이륙 이후 - 항행·분리·도착까지
-const PHASE_INTERVAL_MS = FLIGHT_DURATION_MS / MISSION_PHASES.length
+// 우주선이 목표까지 거리의 90%에 도달할 때까지 걸리는 시간, 그리고 탐사선이
+// 분리되어 남은 10%를 혼자 날아가는(살짝 더 느긋하게, "최종 접근" 느낌으로) 시간.
+// 전체 애니메이션이 정확히 10초일 필요는 없음 - 분리 시점을 거리 기준으로 맞추는
+// 게 우선이라 다 합쳐 10초보다 길어짐.
+const SHIP_TRAVEL_MS = 9_000
+const PROBE_FINAL_MS = 3_000
+const FLIGHT_DURATION_MS = SHIP_TRAVEL_MS + PROBE_FINAL_MS
 
-// 네 번째 문구("탐사선 분리")가 뜨는 시점(= index 4/전체 문구 수)에 맞춰 탐사선이
-// 우주선에서 떨어져 나가는 연출이 시작됨.
-const SEPARATION_PROGRESS = 4 / MISSION_PHASES.length
+// MISSION_PHASES의 각 문구를 "실제로 그 일이 일어나는 순간"에 직접 고정시키기
+// 위한 타이밍(launch 종료 시점부터의 경과 ms). 일정 간격으로 흘러가는 타이머가
+// 아니라, 발사/분리처럼 눈에 보이는 사건과 문구가 항상 같은 타이밍에 맞도록 함.
+const PHASE_SCHEDULE_MS = [
+  0, // '발사! 지구 중력권 이탈 중' - 발사 연출이 끝나고 우주선이 막 움직이기 시작하는 순간
+  SHIP_TRAVEL_MS / 3, // '항행 중 - 궤도 보정 수행'
+  (SHIP_TRAVEL_MS / 3) * 2, // '목표 항성계 접근 중'
+  SHIP_TRAVEL_MS, // '탐사선 분리 - 최종 접근 시작' - 실제 분리 순간과 정확히 일치
+  SHIP_TRAVEL_MS + PROBE_FINAL_MS / 2, // '관측/착륙 시퀀스 진입'
+]
 
 const START_LEFT = 6 // %
-const SEPARATION_LEFT = 66 // % - 우주선이 멈추고 탐사선이 분리되는 지점
-const ARRIVAL_LEFT = 90 // % - 탐사선이 행성에 도달하는 지점
+const SEPARATION_LEFT = 90 // % - 목표까지 거리의 90% 지점, 우주선이 멈추고 탐사선이 분리됨
+const ARRIVAL_LEFT = 96 // % - 탐사선이 행성 마커에 도달하는 지점
 
 export function createMissionRunner(stel: StelInstance, onResolved: () => void): (designation: string, shipImageFile: string, crewed: boolean) => void {
   const flightOverlay = document.createElement('div')
@@ -123,32 +135,31 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
     exhaustEl.classList.add('igniting')
 
     setTimeout(() => {
-      // 2단계: 이륙 - 분사 이펙트가 꺼지고 본격적인 항행이 시작됨.
+      // 2단계: 이륙 - 분사 이펙트가 꺼지고 본격적인 항행이 시작됨. 문구도 바로
+      // "발사!"로 바뀜 - 우주선이 이미 움직이기 시작했는데 "카운트다운" 문구가
+      // 남아있는 일이 없도록.
       exhaustEl.classList.remove('igniting')
+      statusEl.textContent = MISSION_PHASES[1]
 
-      const separationDelayMs = FLIGHT_DURATION_MS * SEPARATION_PROGRESS
-      const probeFlightMs = FLIGHT_DURATION_MS - separationDelayMs
-
-      shipImg.style.transition = `left ${separationDelayMs}ms linear`
+      shipImg.style.transition = `left ${SHIP_TRAVEL_MS}ms linear`
       shipImg.style.left = `${SEPARATION_LEFT}%`
 
-      let phaseIndex = 0
-      const phaseTimer = setInterval(() => {
-        phaseIndex = Math.min(phaseIndex + 1, MISSION_PHASES.length - 1)
-        statusEl.textContent = MISSION_PHASES[phaseIndex]
-      }, PHASE_INTERVAL_MS)
+      // 나머지 문구들은 실제 사건(분리 등)과 같은 시각에 뜨도록 각각 고정 타이밍에 예약.
+      const phaseTimers = PHASE_SCHEDULE_MS.slice(1).map((delay, i) =>
+        setTimeout(() => (statusEl.textContent = MISSION_PHASES[i + 2]), delay),
+      )
 
-      // 탐사선 분리: 우주선이 도착한 지점에서 행성까지 남은 거리를 혼자 이동.
+      // 탐사선 분리: 우주선이 거리의 90%에 도달한 지점에서 남은 10%를 혼자 이동.
       setTimeout(() => {
         probeImg.style.left = `${SEPARATION_LEFT}%`
         probeImg.classList.add('visible')
         void probeImg.offsetWidth
-        probeImg.style.transition = `left ${probeFlightMs}ms linear`
+        probeImg.style.transition = `left ${PROBE_FINAL_MS}ms linear`
         probeImg.style.left = `${ARRIVAL_LEFT}%`
-      }, separationDelayMs)
+      }, SHIP_TRAVEL_MS)
 
       setTimeout(() => {
-        clearInterval(phaseTimer)
+        phaseTimers.forEach(clearTimeout)
         flightOverlay.classList.remove('visible')
         resolveMission(designation, crewed)
       }, FLIGHT_DURATION_MS)
