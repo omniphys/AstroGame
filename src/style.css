@@ -625,20 +625,25 @@ body,
   height: 80px;
 }
 
-.mission-earth,
-.mission-target-marker {
+.mission-earth {
   position: absolute;
   top: 50%;
+  left: 0;
   transform: translateY(-50%);
   font-size: 32px;
 }
 
-.mission-earth {
-  left: 0;
-}
-
-.mission-target-marker {
+.mission-planet-marker {
+  position: absolute;
+  top: 50%;
   right: 0;
+  transform: translateY(-50%);
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
 }
 
 .mission-ship {
@@ -647,7 +652,24 @@ body,
   left: 6%;
   width: 40px;
   height: 40px;
+  /* 아이콘은 코가 위를 향하게 그려져 있으므로, 진행 방향(오른쪽)을 보도록
+     90도 회전 - translate로 자기 중심에 맞춘 뒤 그 자리에서 회전. */
+  transform: translate(-50%, -50%) rotate(90deg);
+}
+
+.mission-probe {
+  position: absolute;
+  top: 50%;
+  left: 6%;
+  width: 26px;
+  height: 26px;
+  opacity: 0;
+  transition: opacity 0.3s;
   transform: translate(-50%, -50%);
+}
+
+.mission-probe.visible {
+  opacity: 1;
 }
 
 .mission-status {
