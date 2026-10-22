@@ -625,25 +625,26 @@ body,
   height: 80px;
 }
 
-.mission-earth {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  transform: translateY(-50%);
-  font-size: 32px;
-}
-
+.mission-earth,
 .mission-planet-marker {
   position: absolute;
   top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  width: 56px;
-  height: 56px;
+  width: 34px;
+  height: 34px;
   border-radius: 50%;
   object-fit: cover;
   border: 2px solid rgba(255, 255, 255, 0.5);
-  box-shadow: 0 0 16px rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 14px rgba(255, 255, 255, 0.25);
+}
+
+.mission-earth {
+  left: 0;
+  transform: translateY(-50%);
+}
+
+.mission-planet-marker {
+  right: 0;
+  transform: translateY(-50%);
 }
 
 .mission-ship {
@@ -670,6 +671,36 @@ body,
 
 .mission-probe.visible {
   opacity: 1;
+}
+
+/* 발사 연출: 우주선이 출발 지점(지구 옆)에 멈춰 있는 동안 바닥에서 가스를
+   분사하는 효과. 회전된 우주선의 엔진 쪽(원래 그림의 아래쪽)이 90도 회전 후
+   왼쪽(지구 방향)을 향하므로, 분사 효과도 우주선의 왼쪽에 둠. */
+.mission-exhaust {
+  position: absolute;
+  top: 50%;
+  width: 30px;
+  height: 30px;
+  transform: translate(-85%, -50%) scale(0.6);
+  border-radius: 50%;
+  background: radial-gradient(circle, #fff6c8 0%, #ffb84d 40%, #ff6a3d 65%, transparent 78%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.mission-exhaust.igniting {
+  animation: mission-exhaust-flicker 0.25s ease-in-out infinite alternate;
+}
+
+@keyframes mission-exhaust-flicker {
+  0% {
+    opacity: 0.55;
+    transform: translate(-85%, -50%) scale(0.6);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(-85%, -50%) scale(1);
+  }
 }
 
 .mission-status {
