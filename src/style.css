@@ -904,60 +904,39 @@ body,
   max-width: min(480px, 80vw);
 }
 
+.approach-canvas {
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: #05070c;
+}
+
 /* 착륙(암석형 천체) - exploration-button/#exploration-panel과 같은 철강빛
    남색 + 호박 톤. */
-.approach-landing-track {
-  position: relative;
-  width: 56px;
-  height: 280px;
-  border-radius: 10px;
-  border: 1px solid rgba(255, 181, 71, 0.35);
-  background: linear-gradient(165deg, rgba(42, 78, 116, 0.9), rgba(17, 32, 54, 0.95) 55%, rgba(8, 13, 22, 0.97));
-  overflow: hidden;
-}
-
-.approach-landing-fill {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-  background: linear-gradient(0deg, #ffb547, #ffd79a);
-}
-
-.approach-speed-readout {
-  color: #fff;
-  font-size: 14px;
-  font-weight: 600;
+.approach-minigame-landing .approach-canvas {
+  border-color: rgba(255, 181, 71, 0.35);
+  box-shadow: 0 0 24px rgba(255, 170, 60, 0.12);
 }
 
 /* 궤도 진입(가스/얼음 거대행성) - .sound-toggle/.object-search-select와
    같은 청록 톤. */
-.approach-orbit-track {
-  position: relative;
-  width: min(600px, 80vw);
-  height: 14px;
-  border-radius: 999px;
-  border: 1px solid rgba(110, 220, 255, 0.5);
-  background: rgba(20, 45, 55, 0.6);
+.approach-minigame-orbit .approach-canvas {
+  border-color: rgba(110, 220, 255, 0.5);
+  box-shadow: 0 0 24px rgba(110, 220, 255, 0.12);
 }
 
-.approach-orbit-zone {
-  position: absolute;
-  top: 0;
+.approach-fuel-bar {
+  width: min(400px, 80vw);
+  height: 10px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.15);
+  overflow: hidden;
+}
+
+.approach-fuel-fill {
   height: 100%;
-  border-radius: 999px;
-  background: rgba(110, 220, 255, 0.35);
-}
-
-.approach-orbit-needle {
-  position: absolute;
-  top: -6px;
-  width: 3px;
-  height: 26px;
-  border-radius: 2px;
-  background: #fff;
-  box-shadow: 0 0 10px rgba(150, 235, 255, 0.9);
-  transform: translateX(-50%);
+  width: 100%;
+  background: linear-gradient(90deg, #ffb547, #ffd79a);
+  transition: width 0.1s linear;
 }
 
 #mission-reveal-overlay {
