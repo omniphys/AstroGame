@@ -879,6 +879,87 @@ body,
   background: linear-gradient(90deg, #7ad7ff, #c792ea);
 }
 
+/* --- 최종 접근 미니게임 (착륙 / 궤도 진입) --- */
+
+#approach-minigame-overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: 82;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 16px;
+  background: rgba(0, 0, 0, 0.75);
+}
+
+#approach-minigame-overlay.visible {
+  display: flex;
+}
+
+.approach-hint {
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  text-align: center;
+  max-width: min(480px, 80vw);
+}
+
+/* 착륙(암석형 천체) - exploration-button/#exploration-panel과 같은 철강빛
+   남색 + 호박 톤. */
+.approach-landing-track {
+  position: relative;
+  width: 56px;
+  height: 280px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 181, 71, 0.35);
+  background: linear-gradient(165deg, rgba(42, 78, 116, 0.9), rgba(17, 32, 54, 0.95) 55%, rgba(8, 13, 22, 0.97));
+  overflow: hidden;
+}
+
+.approach-landing-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background: linear-gradient(0deg, #ffb547, #ffd79a);
+}
+
+.approach-speed-readout {
+  color: #fff;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* 궤도 진입(가스/얼음 거대행성) - .sound-toggle/.object-search-select와
+   같은 청록 톤. */
+.approach-orbit-track {
+  position: relative;
+  width: min(600px, 80vw);
+  height: 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(110, 220, 255, 0.5);
+  background: rgba(20, 45, 55, 0.6);
+}
+
+.approach-orbit-zone {
+  position: absolute;
+  top: 0;
+  height: 100%;
+  border-radius: 999px;
+  background: rgba(110, 220, 255, 0.35);
+}
+
+.approach-orbit-needle {
+  position: absolute;
+  top: -6px;
+  width: 3px;
+  height: 26px;
+  border-radius: 2px;
+  background: #fff;
+  box-shadow: 0 0 10px rgba(150, 235, 255, 0.9);
+  transform: translateX(-50%);
+}
+
 #mission-reveal-overlay {
   display: none;
   position: fixed;
