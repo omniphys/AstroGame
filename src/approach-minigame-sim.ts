@@ -1,6 +1,6 @@
 export type ApproachKind = 'landing' | 'orbit'
 
-export type ApproachFailureReason = 'overspeed' | 'too-early' | 'too-late' | 'timeout'
+export type ApproachFailureReason = 'overspeed' | 'out-of-fuel' | 'too-early' | 'too-late' | 'timeout'
 
 export type ApproachResult = { success: true } | { success: false; reason: ApproachFailureReason }
 
@@ -55,7 +55,7 @@ export function landingOutcome(state: LandingState, params: LandingParams): Appr
   if (state.altitude <= 0) {
     return state.speed <= params.safeSpeed ? { success: true } : { success: false, reason: 'overspeed' }
   }
-  if (state.elapsedMs >= params.timeLimitMs) return { success: false, reason: 'timeout' }
+  if (state.elapsedMs >= params.timeLimitMs) return { success: false, reason: 'out-of-fuel' }
   return null
 }
 
@@ -89,9 +89,15 @@ export function orbitPressOutcome(elapsedMs: number, params: OrbitParams): Appro
   const position = needlePosition(elapsedMs, params)
   const zoneStart = ORBIT_ZONE_CENTER - params.zoneWidth / 2
   const zoneEnd = ORBIT_ZONE_CENTER + params.zoneWidth / 2
-  if (position < zoneStart) return { success: false, reason: 'too-early' }
-  if (position > zoneEnd) return { success: false, reason: 'too-late' }
-  return { success: true }
+  if (position >= zoneStart && position <= zoneEnd) return { success: true }
+
+  // 바늘은 0→100→0으로 왕복하므로, 복귀 구간(100→0)에서는 "구간보다 왼쪽"이
+  // 곧 "아직 안 옴"이 아니라 "이미 지나감"이 된다 - 위치만으로는 판단할 수
+  // 없고 진행 방향이 필요함.
+  const distance = (elapsedMs / 1000) * params.needleSpeed
+  const movingRight = distance % 200 <= 100
+  const beforeZone = movingRight ? position < zoneStart : position > zoneEnd
+  return beforeZone ? { success: false, reason: 'too-early' } : { success: false, reason: 'too-late' }
 }
 
 export function orbitTimeoutResult(): ApproachResult {

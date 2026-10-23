@@ -67,8 +67,8 @@ export interface Part {
 
 export const PARTS: Part[] = [
   { id: 'booster', label: '추진 부스터', cost: 20, scoreBonus: 5, successChanceBonus: 0.07, imageFile: 'part-booster.svg', blurb: '추력과 적재량을 높여 탐사마다 약간의 추가 성과를 얻고, 항행 안정성도 높임.' },
-  { id: 'life-support', label: '생명유지 모듈', cost: 40, scoreBonus: 0, successChanceBonus: 0.05, imageFile: 'part-life-support.svg', blurb: '유인 탐사를 가능하게 함 - 유인으로 탐사하면 점수가 두 배. 이중 안전장치로 성공률도 소폭 상승.' },
-  { id: 'instruments', label: '정밀 관측 장비', cost: 30, scoreBonus: 10, successChanceBonus: 0.08, imageFile: 'part-instruments.svg', blurb: '더 정확한 데이터를 수집해 탐사마다 추가 점수를 얻고, 정밀 접근으로 실패 확률도 줄임.' },
+  { id: 'life-support', label: '생명유지 모듈', cost: 40, scoreBonus: 0, successChanceBonus: 0.05, imageFile: 'part-life-support.svg', blurb: '유인 탐사를 가능하게 함 - 유인으로 탐사하면 점수가 두 배. 이중 안전장치로 접근 미니게임도 조금 더 너그러워짐.' },
+  { id: 'instruments', label: '정밀 관측 장비', cost: 30, scoreBonus: 10, successChanceBonus: 0.08, imageFile: 'part-instruments.svg', blurb: '더 정확한 데이터를 수집해 탐사마다 추가 점수를 얻고, 정밀 접근으로 접근 미니게임도 더 쉬워짐.' },
 ]
 
 export interface RankTitle {
@@ -101,6 +101,7 @@ export const MISSION_PHASES: string[] = [
 // 최종 접근 미니게임에서 실제로 무엇이 잘못됐는지에 맞춘 실패 문구.
 export const APPROACH_FAILURE_REASONS: Record<ApproachFailureReason, string> = {
   overspeed: '하강 속도가 너무 빨라 착륙 중 충돌했습니다.',
+  'out-of-fuel': '너무 조심스럽게 하강하다 연료를 다 써버려 착륙에 실패했습니다.',
   'too-early': '감속을 너무 일찍 시작해 궤도를 벗어나지 못하고 대기권에 끌려 들어갔습니다.',
   'too-late': '감속이 늦어 궤도 진입 창을 놓치고 우주로 날아가 버렸습니다.',
   timeout: '제때 반응하지 못해 접근에 실패했습니다.',

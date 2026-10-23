@@ -47,10 +47,10 @@ test('landingOutcome fails with overspeed when touchdown speed exceeds safeSpeed
   assert.deepEqual(result, { success: false, reason: 'overspeed' })
 })
 
-test('landingOutcome fails with timeout when the time limit is reached before touchdown', () => {
+test('landingOutcome fails with out-of-fuel when the time limit is reached before touchdown', () => {
   const params = { gravity: 20, thrust: 32, safeSpeed: 10, startAltitude: 100, timeLimitMs: 8000 }
   const result = landingOutcome({ altitude: 5, speed: 3, elapsedMs: 8000 }, params)
-  assert.deepEqual(result, { success: false, reason: 'timeout' })
+  assert.deepEqual(result, { success: false, reason: 'out-of-fuel' })
 })
 
 test('landingOutcome returns null while still in progress', () => {
@@ -88,6 +88,18 @@ test('orbitPressOutcome fails too-early before the safe zone', () => {
 test('orbitPressOutcome fails too-late after the safe zone', () => {
   const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 }
   assert.deepEqual(orbitPressOutcome(1500, params), { success: false, reason: 'too-late' })
+})
+
+test('orbitPressOutcome fails too-early on the return sweep when the needle has not reached the zone yet', () => {
+  const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 } // zone 40-60
+  // distance 120 -> cycle 120 -> position 80 (needle descending from 100, hasn't reached the zone)
+  assert.deepEqual(orbitPressOutcome(2400, params), { success: false, reason: 'too-early' })
+})
+
+test('orbitPressOutcome fails too-late on the return sweep after the needle has already passed the zone', () => {
+  const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 } // zone 40-60
+  // distance 170 -> cycle 170 -> position 30 (needle already descended past the zone)
+  assert.deepEqual(orbitPressOutcome(3400, params), { success: false, reason: 'too-late' })
 })
 
 test('orbitParamsForEasiness pins the hardest and easiest values', () => {
