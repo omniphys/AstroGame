@@ -12,6 +12,8 @@ import {
   initialOrbitState,
   stepOrbit,
   orbitOutcome,
+  LANDING_CANVAS_WIDTH,
+  LANDING_CANVAS_HEIGHT,
 } from './approach-minigame-sim'
 
 let active = false
@@ -20,6 +22,8 @@ export function isApproachMinigameActive(): boolean {
   return active
 }
 
+// sim.ts의 ORBIT_MAX_RADIUS(140)보다 여유 있게 커야 궤도 반경이 캔버스
+// 밖으로 나가지 않음 - 둘을 같이 조정할 때 유의.
 const ORBIT_CANVAS_SIZE = 300
 const ORBIT_PLANET_RADIUS = 30
 const ORBIT_SPIN_RADIANS_PER_SEC = 1.4
@@ -32,7 +36,7 @@ function buildOverlay(kind: ApproachKind): { overlay: HTMLDivElement; canvas: HT
     kind === 'landing'
       ? `
         <div class="approach-hint">방향키로 조작해 중앙 착륙장에 안착하세요.</div>
-        <canvas class="approach-canvas" width="400" height="300"></canvas>
+        <canvas class="approach-canvas" width="${LANDING_CANVAS_WIDTH}" height="${LANDING_CANVAS_HEIGHT}"></canvas>
         <div class="approach-fuel-bar"><div class="approach-fuel-fill"></div></div>
       `
       : `

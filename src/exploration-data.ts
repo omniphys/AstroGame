@@ -49,8 +49,8 @@ export interface ProbeTier {
 
 export const PROBE_TIERS: ProbeTier[] = [
   { tier: 1, label: '기본 로버', cost: 15, scoreBonus: 0, fuelBonus: 0, imageFile: 'probe-1.svg', blurb: '바퀴로 이동하며 기본적인 표면 조사를 수행.' },
-  { tier: 2, label: '궤도 관측선', cost: 35, scoreBonus: 5, fuelBonus: 10, imageFile: 'probe-2.svg', blurb: '궤도를 돌며 넓은 영역을 관측 - 가스 행성에도 투입 가능.' },
-  { tier: 3, label: '정밀 다목적 탐사선', cost: 60, scoreBonus: 15, fuelBonus: 20, imageFile: 'probe-3.svg', blurb: '착륙·궤도 관측을 모두 수행하는 고성능 복합 탐사선.' },
+  { tier: 2, label: '궤도 관측선', cost: 35, scoreBonus: 5, fuelBonus: 2, imageFile: 'probe-2.svg', blurb: '궤도를 돌며 넓은 영역을 관측 - 가스 행성에도 투입 가능.' },
+  { tier: 3, label: '정밀 다목적 탐사선', cost: 60, scoreBonus: 15, fuelBonus: 5, imageFile: 'probe-3.svg', blurb: '착륙·궤도 관측을 모두 수행하는 고성능 복합 탐사선.' },
 ]
 
 export type PartId = 'booster' | 'life-support' | 'instruments'
@@ -67,8 +67,8 @@ export interface Part {
 }
 
 export const PARTS: Part[] = [
-  { id: 'booster', label: '추진 부스터', cost: 20, scoreBonus: 5, fuelBonus: 15, toleranceBonus: 0, imageFile: 'part-booster.svg', blurb: '추력과 연료 탱크를 늘려 탐사마다 약간의 추가 성과를 얻고, 접근 미니게임에서 쓸 수 있는 연료도 늘어남.' },
-  { id: 'life-support', label: '생명유지 모듈', cost: 40, scoreBonus: 0, fuelBonus: 8, toleranceBonus: 0, imageFile: 'part-life-support.svg', blurb: '유인 탐사를 가능하게 함 - 유인으로 탐사하면 점수가 두 배. 이중 안전장치로 예비 연료도 조금 더 실림.' },
+  { id: 'booster', label: '추진 부스터', cost: 20, scoreBonus: 5, fuelBonus: 4, toleranceBonus: 0, imageFile: 'part-booster.svg', blurb: '추력과 연료 탱크를 늘려 탐사마다 약간의 추가 성과를 얻고, 접근 미니게임에서 쓸 수 있는 연료도 늘어남.' },
+  { id: 'life-support', label: '생명유지 모듈', cost: 40, scoreBonus: 0, fuelBonus: 2, toleranceBonus: 0, imageFile: 'part-life-support.svg', blurb: '유인 탐사를 가능하게 함 - 유인으로 탐사하면 점수가 두 배. 이중 안전장치로 예비 연료도 조금 더 실림.' },
   { id: 'instruments', label: '정밀 관측 장비', cost: 30, scoreBonus: 10, fuelBonus: 0, toleranceBonus: 12, imageFile: 'part-instruments.svg', blurb: '더 정확한 데이터를 수집해 탐사마다 추가 점수를 얻고, 정밀 접근으로 착륙/궤도 목표 범위도 넓어짐.' },
 ]
 
