@@ -93,18 +93,24 @@ export function buyPart(id: PartId): boolean {
   return true
 }
 
-// 0-0.95. 최종 성공/실패는 더 이상 이 값을 굴려서 정하지 않음 - 접근
-// 미니게임을 얼마나 너그럽게(중력/안전 속도, 안전 구간 폭 등) 만들지
-// 정하는 값. 장비(탐사선 단계 + 부품)가 좋을수록 높아져 미니게임이 쉬워짐.
-export function getApproachEasiness(designation: string): number {
+// 0-1. 그 대상의 기본 난이도(장비 없이)를 그대로 돌려준다.
+export function getBaseEasiness(designation: string): number {
   const shipEntry = SHIP_TIERS.find((s) => s.designation === designation)
-  if (!shipEntry) return 0
+  return shipEntry?.baseEasiness ?? 0
+}
 
-  const probeBonus = PROBE_TIERS[getProbeTier() - 1]?.successChanceBonus ?? 0
+// 탐사선 단계 + 소유한 부품(부스터/생명유지 모듈)에서 나오는 연료 보너스 합(초 단위).
+export function getFuelBonus(): number {
+  const probeBonus = PROBE_TIERS[getProbeTier() - 1]?.fuelBonus ?? 0
   const owned = getOwnedParts()
-  const partsBonus = PARTS.filter((p) => owned.has(p.id)).reduce((sum, p) => sum + p.successChanceBonus, 0)
+  const partsBonus = PARTS.filter((p) => owned.has(p.id)).reduce((sum, p) => sum + p.fuelBonus, 0)
+  return probeBonus + partsBonus
+}
 
-  return Math.min(0.95, shipEntry.baseSuccessChance + probeBonus + partsBonus)
+// 소유한 부품(정밀 관측 장비)에서 나오는 목표 범위 보너스 합.
+export function getToleranceBonus(): number {
+  const owned = getOwnedParts()
+  return PARTS.filter((p) => owned.has(p.id)).reduce((sum, p) => sum + p.toleranceBonus, 0)
 }
 
 // Runs a mission to `designation` (must already be reachable/equipped - the
