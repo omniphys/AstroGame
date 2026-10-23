@@ -1,116 +1,210 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import {
-  landingParamsForEasiness,
+  landingParamsFor,
   initialLandingState,
   stepLanding,
   landingOutcome,
-  orbitParamsForEasiness,
-  needlePosition,
-  orbitPressOutcome,
-  orbitTimeoutResult,
+  orbitParamsFor,
+  initialOrbitState,
+  stepOrbit,
+  orbitOutcome,
 } from './approach-minigame-sim.ts'
 
-test('initialLandingState starts at the params startAltitude with zero speed and elapsed time', () => {
-  const params = landingParamsForEasiness(0)
-  const state = initialLandingState(params)
-  assert.deepEqual(state, { altitude: params.startAltitude, speed: 0, elapsedMs: 0 })
-})
+// --- 착륙 ---
 
-test('stepLanding applies gravity when thrust is not held', () => {
-  const params = landingParamsForEasiness(0) // gravity 40, safeSpeed 10
-  const state = { altitude: 100, speed: 0, elapsedMs: 0 }
-  const next = stepLanding(state, 1000, false, { ...params, gravity: 20 })
-  assert.equal(next.speed, 20)
-  assert.equal(next.altitude, 80)
+test('stepLanding applies gravity with no keys held, x unchanged, fuel unchanged', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const state = { x: 200, y: 20, vx: 0, vy: 0, fuel: 50, elapsedMs: 0 }
+  const next = stepLanding(state, 1000, { up: false, left: false, right: false }, params)
+  assert.equal(next.vy, 60)
+  assert.equal(next.y, 80)
+  assert.equal(next.x, 200)
+  assert.equal(next.fuel, 50)
   assert.equal(next.elapsedMs, 1000)
 })
 
-test('stepLanding decelerates net when thrust is held and thrust > gravity', () => {
-  const params = { gravity: 20, thrust: 32, safeSpeed: 10, startAltitude: 100, timeLimitMs: 8000 }
-  const state = { altitude: 80, speed: 20, elapsedMs: 1000 }
-  const next = stepLanding(state, 500, true, params)
-  assert.equal(next.speed, 14)
-  assert.equal(next.altitude, 73)
+test('stepLanding brakes when up is held', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const state = { x: 200, y: 80, vx: 0, vy: 60, fuel: 50, elapsedMs: 1000 }
+  const next = stepLanding(state, 500, { up: true, left: false, right: false }, params)
+  assert.equal(next.vy, 15)
+  assert.equal(next.y, 87.5)
+  assert.equal(next.fuel, 49.5)
   assert.equal(next.elapsedMs, 1500)
 })
 
-test('landingOutcome succeeds when touchdown speed is within safeSpeed', () => {
-  const params = { gravity: 20, thrust: 32, safeSpeed: 10, startAltitude: 100, timeLimitMs: 8000 }
-  const result = landingOutcome({ altitude: 0, speed: 8, elapsedMs: 3000 }, params)
+test('stepLanding pushes left and drains fuel when left is held', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const state = { x: 200, y: 50, vx: 0, vy: 20, fuel: 50, elapsedMs: 0 }
+  const next = stepLanding(state, 1000, { up: false, left: true, right: false }, params)
+  assert.equal(next.vy, 80)
+  assert.equal(next.vx, -80)
+  assert.equal(next.x, 120)
+  assert.equal(next.fuel, 49)
+})
+
+test('stepLanding holding multiple keys at once drains fuel the same as holding one', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const state = { x: 200, y: 50, vx: 0, vy: 20, fuel: 50, elapsedMs: 0 }
+  const next = stepLanding(state, 1000, { up: true, left: true, right: false }, params)
+  assert.equal(next.fuel, 49)
+})
+
+test('stepLanding clamps x at the left edge and zeroes vx', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const state = { x: 10, y: 50, vx: -50, vy: 0, fuel: 50, elapsedMs: 0 }
+  const next = stepLanding(state, 1000, { up: false, left: false, right: false }, params)
+  assert.equal(next.x, 0)
+  assert.equal(next.vx, 0)
+})
+
+test('stepLanding clamps x at the right edge and zeroes vx', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const state = { x: 390, y: 50, vx: 50, vy: 0, fuel: 50, elapsedMs: 0 }
+  const next = stepLanding(state, 1000, { up: false, left: false, right: false }, params)
+  assert.equal(next.x, 400)
+  assert.equal(next.vx, 0)
+})
+
+test('stepLanding never drains fuel below zero', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const state = { x: 200, y: 50, vx: 0, vy: 0, fuel: 0.3, elapsedMs: 0 }
+  const next = stepLanding(state, 1000, { up: true, left: false, right: false }, params)
+  assert.equal(next.fuel, 0)
+})
+
+test('landingOutcome succeeds within the target band and under the safe speed', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const result = landingOutcome({ x: 210, y: 280, vx: 10, vy: 20, fuel: 10, elapsedMs: 5000 }, params)
   assert.deepEqual(result, { success: true })
 })
 
-test('landingOutcome fails with overspeed when touchdown speed exceeds safeSpeed', () => {
-  const params = { gravity: 20, thrust: 32, safeSpeed: 10, startAltitude: 100, timeLimitMs: 8000 }
-  const result = landingOutcome({ altitude: 0, speed: 15, elapsedMs: 3000 }, params)
+test('landingOutcome fails off-target when outside the landing pad', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const result = landingOutcome({ x: 260, y: 280, vx: 0, vy: 10, fuel: 10, elapsedMs: 5000 }, params)
+  assert.deepEqual(result, { success: false, reason: 'off-target' })
+})
+
+test('landingOutcome fails overspeed when touchdown speed exceeds the safe speed', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const result = landingOutcome({ x: 205, y: 280, vx: 0, vy: 80, fuel: 10, elapsedMs: 5000 }, params)
   assert.deepEqual(result, { success: false, reason: 'overspeed' })
 })
 
-test('landingOutcome fails with out-of-fuel when the time limit is reached before touchdown', () => {
-  const params = { gravity: 20, thrust: 32, safeSpeed: 10, startAltitude: 100, timeLimitMs: 8000 }
-  const result = landingOutcome({ altitude: 5, speed: 3, elapsedMs: 8000 }, params)
-  assert.deepEqual(result, { success: false, reason: 'out-of-fuel' })
-})
-
-test('landingOutcome returns null while still in progress', () => {
-  const params = { gravity: 20, thrust: 32, safeSpeed: 10, startAltitude: 100, timeLimitMs: 8000 }
-  const result = landingOutcome({ altitude: 50, speed: 5, elapsedMs: 2000 }, params)
+test('landingOutcome returns null while still airborne and within the time limit', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const result = landingOutcome({ x: 200, y: 150, vx: 0, vy: 30, fuel: 10, elapsedMs: 5000 }, params)
   assert.equal(result, null)
 })
 
-test('landingParamsForEasiness pins the hardest and easiest values', () => {
-  const hardest = landingParamsForEasiness(0)
-  assert.equal(hardest.gravity, 40)
-  assert.equal(hardest.safeSpeed, 10)
-  const easiest = landingParamsForEasiness(0.95)
-  assert.ok(Math.abs(easiest.gravity - 19.1) < 1e-9)
-  assert.ok(Math.abs(easiest.safeSpeed - 24.25) < 1e-9)
+test('landingOutcome fails out-of-fuel if still airborne when the time limit is reached', () => {
+  const params = { canvasWidth: 400, groundY: 280, gravity: 60, verticalThrust: 150, lateralThrust: 80, safeLandingSpeed: 50, targetHalfWidth: 30, maxFuel: 50, timeLimitMs: 15000 }
+  const result = landingOutcome({ x: 200, y: 150, vx: 0, vy: 30, fuel: 0, elapsedMs: 15000 }, params)
+  assert.deepEqual(result, { success: false, reason: 'out-of-fuel' })
 })
 
-test('needlePosition sweeps 0 to 100 and back', () => {
-  const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 }
-  assert.equal(needlePosition(0, params), 0)
-  assert.equal(needlePosition(1000, params), 50)
-  assert.equal(needlePosition(2500, params), 75)
+test('landingParamsFor pins the hardest and easiest values, plus equipment bonuses', () => {
+  const hardest = landingParamsFor({ baseEasiness: 0, fuelBonus: 10, toleranceBonus: 5 })
+  assert.equal(hardest.gravity, 90)
+  assert.equal(hardest.safeLandingSpeed, 40)
+  assert.equal(hardest.targetHalfWidth, 30)
+  assert.equal(hardest.maxFuel, 70)
+  const easiest = landingParamsFor({ baseEasiness: 0.95, fuelBonus: 0, toleranceBonus: 0 })
+  assert.ok(Math.abs(easiest.gravity - 50.1) < 1e-9)
+  assert.ok(Math.abs(easiest.safeLandingSpeed - 78) < 1e-9)
+  assert.ok(Math.abs(easiest.targetHalfWidth - 44) < 1e-9)
+  assert.ok(Math.abs(easiest.maxFuel - 98) < 1e-9)
 })
 
-test('orbitPressOutcome succeeds inside the safe zone', () => {
-  const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 } // zone 40-60
-  assert.deepEqual(orbitPressOutcome(1000, params), { success: true })
+test('initialLandingState starts at the given x and the params startY/maxFuel', () => {
+  const params = landingParamsFor({ baseEasiness: 0.5, fuelBonus: 0, toleranceBonus: 0 })
+  const state = initialLandingState(params, 260)
+  assert.deepEqual(state, { x: 260, y: 20, vx: 0, vy: 0, fuel: params.maxFuel, elapsedMs: 0 })
 })
 
-test('orbitPressOutcome fails too-early before the safe zone', () => {
-  const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 }
-  assert.deepEqual(orbitPressOutcome(200, params), { success: false, reason: 'too-early' })
+// --- 궤도 진입 ---
+
+test('stepOrbit with no keys held keeps radialSpeed and drifts radius by it', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const state = { radius: 100, radialSpeed: -10, fuel: 20, elapsedMs: 0 }
+  const next = stepOrbit(state, 1000, { up: false, down: false }, params)
+  assert.equal(next.radialSpeed, -10)
+  assert.equal(next.radius, 90)
+  assert.equal(next.fuel, 20)
 })
 
-test('orbitPressOutcome fails too-late after the safe zone', () => {
-  const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 }
-  assert.deepEqual(orbitPressOutcome(1500, params), { success: false, reason: 'too-late' })
+test('stepOrbit grows the radius when up (prograde) is held', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const state = { radius: 100, radialSpeed: 0, fuel: 20, elapsedMs: 0 }
+  const next = stepOrbit(state, 1000, { up: true, down: false }, params)
+  assert.equal(next.radialSpeed, 25)
+  assert.equal(next.radius, 125)
+  assert.equal(next.fuel, 19)
 })
 
-test('orbitPressOutcome fails too-early on the return sweep when the needle has not reached the zone yet', () => {
-  const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 } // zone 40-60
-  // distance 120 -> cycle 120 -> position 80 (needle descending from 100, hasn't reached the zone)
-  assert.deepEqual(orbitPressOutcome(2400, params), { success: false, reason: 'too-early' })
+test('stepOrbit shrinks the radius when down (retrograde) is held', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const state = { radius: 100, radialSpeed: 0, fuel: 20, elapsedMs: 0 }
+  const next = stepOrbit(state, 1000, { up: false, down: true }, params)
+  assert.equal(next.radialSpeed, -25)
+  assert.equal(next.radius, 75)
+  assert.equal(next.fuel, 19)
 })
 
-test('orbitPressOutcome fails too-late on the return sweep after the needle has already passed the zone', () => {
-  const params = { zoneWidth: 20, needleSpeed: 50, timeLimitMs: 8000 } // zone 40-60
-  // distance 170 -> cycle 170 -> position 30 (needle already descended past the zone)
-  assert.deepEqual(orbitPressOutcome(3400, params), { success: false, reason: 'too-late' })
+test('stepOrbit holding up and down together cancels out but still drains fuel once', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const state = { radius: 100, radialSpeed: 0, fuel: 20, elapsedMs: 0 }
+  const next = stepOrbit(state, 1000, { up: true, down: true }, params)
+  assert.equal(next.radialSpeed, 0)
+  assert.equal(next.radius, 100)
+  assert.equal(next.fuel, 19)
 })
 
-test('orbitParamsForEasiness pins the hardest and easiest values', () => {
-  const hardest = orbitParamsForEasiness(0)
-  assert.equal(hardest.zoneWidth, 14)
-  assert.equal(hardest.needleSpeed, 70)
-  const easiest = orbitParamsForEasiness(0.95)
-  assert.ok(Math.abs(easiest.zoneWidth - 38.7) < 1e-9)
-  assert.ok(Math.abs(easiest.needleSpeed - 51) < 1e-9)
+test('stepOrbit never lets radius go negative', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const state = { radius: 5, radialSpeed: -100, fuel: 20, elapsedMs: 0 }
+  const next = stepOrbit(state, 1000, { up: false, down: false }, params)
+  assert.equal(next.radius, 0)
 })
 
-test('orbitTimeoutResult reports a timeout failure', () => {
-  assert.deepEqual(orbitTimeoutResult(), { success: false, reason: 'timeout' })
+test('orbitOutcome fails crashed when radius reaches the crash threshold', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const result = orbitOutcome({ radius: 35, radialSpeed: 0, fuel: 10, elapsedMs: 5000 }, params)
+  assert.deepEqual(result, { success: false, reason: 'crashed' })
+})
+
+test('orbitOutcome succeeds when within the band and the radius has stabilized', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const result = orbitOutcome({ radius: 95, radialSpeed: 3, fuel: 10, elapsedMs: 5000 }, params)
+  assert.deepEqual(result, { success: true })
+})
+
+test('orbitOutcome returns null when within the band but still drifting', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const result = orbitOutcome({ radius: 95, radialSpeed: 20, fuel: 10, elapsedMs: 5000 }, params)
+  assert.equal(result, null)
+})
+
+test('orbitOutcome fails out-of-fuel when the time limit is reached without stabilizing', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 20, timeLimitMs: 15000 }
+  const result = orbitOutcome({ radius: 120, radialSpeed: 10, fuel: 0, elapsedMs: 15000 }, params)
+  assert.deepEqual(result, { success: false, reason: 'out-of-fuel' })
+})
+
+test('orbitParamsFor pins the hardest and easiest values, plus equipment bonuses', () => {
+  const hardest = orbitParamsFor({ baseEasiness: 0, fuelBonus: 5, toleranceBonus: 3 })
+  assert.equal(hardest.targetHalfWidth, 13)
+  assert.equal(hardest.startRadiusGap, 80)
+  assert.equal(hardest.maxFuel, 55)
+  const easiest = orbitParamsFor({ baseEasiness: 0.95, fuelBonus: 0, toleranceBonus: 0 })
+  assert.ok(Math.abs(easiest.targetHalfWidth - 24.25) < 1e-9)
+  assert.ok(Math.abs(easiest.startRadiusGap - 43.9) < 1e-9)
+  assert.ok(Math.abs(easiest.maxFuel - 78.5) < 1e-9)
+})
+
+test('initialOrbitState starts beyond the target radius by startRadiusGap, at rest, full fuel', () => {
+  const params = { targetRadius: 90, targetHalfWidth: 15, startRadiusGap: 40, crashRadius: 40, radialThrust: 25, stableSpeedThreshold: 6, maxFuel: 60, timeLimitMs: 15000 }
+  const state = initialOrbitState(params)
+  assert.deepEqual(state, { radius: 130, radialSpeed: 0, fuel: 60, elapsedMs: 0 })
 })
