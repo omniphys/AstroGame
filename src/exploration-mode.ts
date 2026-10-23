@@ -9,7 +9,6 @@ import {
   buyNextShipTier,
   buyNextProbeTier,
   buyPart,
-  getMissionSuccessChance,
 } from './exploration-state'
 import { createMissionRunner } from './exploration-mission'
 import { getPoints } from './points'
@@ -87,10 +86,10 @@ export function createExplorationMode(stel: StelInstance): void {
       })
     }).join('')
 
-    const canExplore = probeTier > 0
     const targetsHtml = SHIP_TIERS.map((ship) => {
       const reachable = shipTier >= ship.tier
       const explored = isExplored(ship.designation)
+      const minProbeTier = ship.approachKind === 'orbit' ? 2 : 1
       let status: string
       let action: string
       if (explored) {
@@ -99,12 +98,15 @@ export function createExplorationMode(stel: StelInstance): void {
       } else if (!reachable) {
         status = '🔒 우주선 단계 부족'
         action = ''
-      } else if (!canExplore) {
+      } else if (probeTier === 0) {
         status = '탐사선이 필요합니다'
         action = ''
+      } else if (probeTier < minProbeTier) {
+        status = '🔒 탐사선 2단계 이상 필요'
+        action = ''
       } else {
-        const chancePercent = Math.round(getMissionSuccessChance(ship.designation) * 100)
-        status = `예상 점수 약 ${ship.baseScore}+ · 성공 확률 ${chancePercent}%`
+        const approachLabel = ship.approachKind === 'landing' ? '착륙' : '궤도 진입'
+        status = `예상 점수 약 ${ship.baseScore}+ · ${approachLabel} 미니게임`
         const crewedOption = hasPart('life-support')
           ? `<label class="crewed-toggle"><input type="checkbox" data-crewed="${ship.designation}"> 유인 탐사(점수 2배)</label>`
           : ''
