@@ -1,7 +1,7 @@
 import type { StelInstance } from './engine'
 import { MISSION_PHASES, APPROACH_FAILURE_REASONS, PROBE_TIERS, SHIP_TIERS, EARTH_GLOBE_TEXTURE_FILE } from './exploration-data'
 import { PHOTO_SUBJECTS } from './photo-subjects'
-import { getApproachEasiness, exploreTarget, getProbeTier } from './exploration-state'
+import { getBaseEasiness, getFuelBonus, getToleranceBonus, exploreTarget, getProbeTier } from './exploration-state'
 import { createSoundToggle, playLaunchSound, playMissionMusic, playMissionSuccess, playMissionFailure } from './sound'
 import { runApproachMinigame } from './approach-minigame'
 import type { ApproachResult } from './approach-minigame-sim'
@@ -167,7 +167,12 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
       setTimeout(() => {
         phaseTimers.forEach(clearTimeout)
         flightOverlay.classList.remove('visible')
-        runApproachMinigame(ship!.approachKind, getApproachEasiness(designation)).then((approach) => {
+        const tuning = {
+          baseEasiness: getBaseEasiness(designation),
+          fuelBonus: getFuelBonus(),
+          toleranceBonus: getToleranceBonus(),
+        }
+        runApproachMinigame(ship!.approachKind, tuning).then((approach) => {
           resolveMission(designation, crewed, approach)
         })
       }, FLIGHT_DURATION_MS)
