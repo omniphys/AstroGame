@@ -10,7 +10,7 @@ export interface ShipTier {
   targetLabel: string
   cost: number
   baseScore: number // 그 대상을 처음 탐사할 때 받는 기본 탐사 점수
-  baseSuccessChance: number // 0-1, 장비 없이 그 대상을 탐사할 때 기본 성공 확률 - 멀고 어려운 대상일수록 낮음
+  baseEasiness: number // 0-1, 그 대상의 기본 난이도(미니게임을 얼마나 너그럽게 만들지의 기준) - 높을수록 쉬움
   approachKind: ApproachKind // 암석형(착륙) vs 가스/얼음 거대행성(궤도 진입) - 최종 접근 미니게임 종류를 결정
   imageFile: string
   // public/textures/planets/*.jpg - solar-system-3d.ts의 3D 뷰에 쓰는 것과 같은
@@ -24,14 +24,14 @@ export interface ShipTier {
 // 현대 발사체/추진 기술에 느슨하게 기반한 이름 + SF 느낌 가미. 수성이 금성보다
 // 기본점수가 높은 건 실제로 수성 도달에 더 많은 델타V가 필요하기 때문.
 export const SHIP_TIERS: ShipTier[] = [
-  { tier: 1, label: '루나 I호', designation: 'NAME Moon', targetLabel: '달', cost: 15, baseScore: 10, baseSuccessChance: 0.9, approachKind: 'landing', imageFile: 'ship-1.svg', globeTextureFile: '2k_moon.jpg', blurb: '화학 추진 로켓. 지구 저궤도를 넘어 달까지 보낼 수 있는 첫 발사체.' },
-  { tier: 2, label: '헬리오스 드라이브', designation: 'NAME Mercury', targetLabel: '수성', cost: 20, baseScore: 25, baseSuccessChance: 0.65, approachKind: 'landing', imageFile: 'ship-2.svg', globeTextureFile: '2k_mercury.jpg', blurb: '태양 근접 궤도에 진입하려면 막대한 감속이 필요해 오히려 화성보다 어려운 목적지.' },
-  { tier: 3, label: '금성 내열 글라이더', designation: 'NAME Venus', targetLabel: '금성', cost: 20, baseScore: 20, baseSuccessChance: 0.75, approachKind: 'landing', imageFile: 'ship-3.svg', globeTextureFile: '2k_venus_surface.jpg', blurb: '고온·고압 대기를 견디는 내열 차폐막을 두른 궤도선.' },
-  { tier: 4, label: '레드 패스파인더', designation: 'NAME Mars', targetLabel: '화성', cost: 25, baseScore: 20, baseSuccessChance: 0.75, approachKind: 'landing', imageFile: 'ship-4.svg', globeTextureFile: '2k_mars.jpg', blurb: '착륙 보조 추진체가 달린 화성 개척용 발사체.' },
-  { tier: 5, label: '갈릴레오 Ⅱ 중추진선', designation: 'NAME Jupiter', targetLabel: '목성', cost: 35, baseScore: 40, baseSuccessChance: 0.6, approachKind: 'orbit', imageFile: 'ship-5.svg', globeTextureFile: '2k_jupiter.jpg', blurb: '강한 중력권을 돌파할 대형 추진 모듈을 장착.' },
-  { tier: 6, label: '크로노스 게이트', designation: 'NAME Saturn', targetLabel: '토성', cost: 40, baseScore: 50, baseSuccessChance: 0.55, approachKind: 'orbit', imageFile: 'ship-6.svg', globeTextureFile: '2k_saturn.jpg', blurb: '고리 궤도를 안전하게 통과하는 항법 보정 링 탑재.' },
-  { tier: 7, label: '아이스 자이언트 익스플로러', designation: 'NAME Uranus', targetLabel: '천왕성', cost: 50, baseScore: 65, baseSuccessChance: 0.45, approachKind: 'orbit', imageFile: 'ship-7.svg', globeTextureFile: '2k_uranus.jpg', blurb: '장거리 항행을 위한 이온 추진 엔진 실험기.' },
-  { tier: 8, label: '트리톤 호라이즌', designation: 'NAME Neptune', targetLabel: '해왕성', cost: 60, baseScore: 80, baseSuccessChance: 0.4, approachKind: 'orbit', imageFile: 'ship-8.svg', globeTextureFile: '2k_neptune.jpg', blurb: '태양계 최장거리 항행용 차세대 추진 시스템 탑재.' },
+  { tier: 1, label: '루나 I호', designation: 'NAME Moon', targetLabel: '달', cost: 15, baseScore: 10, baseEasiness: 0.9, approachKind: 'landing', imageFile: 'ship-1.svg', globeTextureFile: '2k_moon.jpg', blurb: '화학 추진 로켓. 지구 저궤도를 넘어 달까지 보낼 수 있는 첫 발사체.' },
+  { tier: 2, label: '헬리오스 드라이브', designation: 'NAME Mercury', targetLabel: '수성', cost: 20, baseScore: 25, baseEasiness: 0.65, approachKind: 'landing', imageFile: 'ship-2.svg', globeTextureFile: '2k_mercury.jpg', blurb: '태양 근접 궤도에 진입하려면 막대한 감속이 필요해 오히려 화성보다 어려운 목적지.' },
+  { tier: 3, label: '금성 내열 글라이더', designation: 'NAME Venus', targetLabel: '금성', cost: 20, baseScore: 20, baseEasiness: 0.75, approachKind: 'landing', imageFile: 'ship-3.svg', globeTextureFile: '2k_venus_surface.jpg', blurb: '고온·고압 대기를 견디는 내열 차폐막을 두른 궤도선.' },
+  { tier: 4, label: '레드 패스파인더', designation: 'NAME Mars', targetLabel: '화성', cost: 25, baseScore: 20, baseEasiness: 0.75, approachKind: 'landing', imageFile: 'ship-4.svg', globeTextureFile: '2k_mars.jpg', blurb: '착륙 보조 추진체가 달린 화성 개척용 발사체.' },
+  { tier: 5, label: '갈릴레오 Ⅱ 중추진선', designation: 'NAME Jupiter', targetLabel: '목성', cost: 35, baseScore: 40, baseEasiness: 0.6, approachKind: 'orbit', imageFile: 'ship-5.svg', globeTextureFile: '2k_jupiter.jpg', blurb: '강한 중력권을 돌파할 대형 추진 모듈을 장착.' },
+  { tier: 6, label: '크로노스 게이트', designation: 'NAME Saturn', targetLabel: '토성', cost: 40, baseScore: 50, baseEasiness: 0.55, approachKind: 'orbit', imageFile: 'ship-6.svg', globeTextureFile: '2k_saturn.jpg', blurb: '고리 궤도를 안전하게 통과하는 항법 보정 링 탑재.' },
+  { tier: 7, label: '아이스 자이언트 익스플로러', designation: 'NAME Uranus', targetLabel: '천왕성', cost: 50, baseScore: 65, baseEasiness: 0.45, approachKind: 'orbit', imageFile: 'ship-7.svg', globeTextureFile: '2k_uranus.jpg', blurb: '장거리 항행을 위한 이온 추진 엔진 실험기.' },
+  { tier: 8, label: '트리톤 호라이즌', designation: 'NAME Neptune', targetLabel: '해왕성', cost: 60, baseScore: 80, baseEasiness: 0.4, approachKind: 'orbit', imageFile: 'ship-8.svg', globeTextureFile: '2k_neptune.jpg', blurb: '태양계 최장거리 항행용 차세대 추진 시스템 탑재.' },
 ]
 
 // 출발 지점(지구) 아이콘에 쓰는 구체 텍스처 - public/textures/planets/*.jpg.
@@ -42,15 +42,15 @@ export interface ProbeTier {
   label: string
   cost: number
   scoreBonus: number
-  successChanceBonus: number // 0-1, 탐사 성공 확률에 더해짐
+  fuelBonus: number // 접근 미니게임에서 쓸 수 있는 연료 보너스(초 단위)
   imageFile: string
   blurb: string
 }
 
 export const PROBE_TIERS: ProbeTier[] = [
-  { tier: 1, label: '기본 로버', cost: 15, scoreBonus: 0, successChanceBonus: 0, imageFile: 'probe-1.svg', blurb: '바퀴로 이동하며 기본적인 표면 조사를 수행.' },
-  { tier: 2, label: '궤도 관측선', cost: 35, scoreBonus: 5, successChanceBonus: 0.07, imageFile: 'probe-2.svg', blurb: '궤도를 돌며 넓은 영역을 관측 - 가스 행성에도 투입 가능.' },
-  { tier: 3, label: '정밀 다목적 탐사선', cost: 60, scoreBonus: 15, successChanceBonus: 0.15, imageFile: 'probe-3.svg', blurb: '착륙·궤도 관측을 모두 수행하는 고성능 복합 탐사선.' },
+  { tier: 1, label: '기본 로버', cost: 15, scoreBonus: 0, fuelBonus: 0, imageFile: 'probe-1.svg', blurb: '바퀴로 이동하며 기본적인 표면 조사를 수행.' },
+  { tier: 2, label: '궤도 관측선', cost: 35, scoreBonus: 5, fuelBonus: 10, imageFile: 'probe-2.svg', blurb: '궤도를 돌며 넓은 영역을 관측 - 가스 행성에도 투입 가능.' },
+  { tier: 3, label: '정밀 다목적 탐사선', cost: 60, scoreBonus: 15, fuelBonus: 20, imageFile: 'probe-3.svg', blurb: '착륙·궤도 관측을 모두 수행하는 고성능 복합 탐사선.' },
 ]
 
 export type PartId = 'booster' | 'life-support' | 'instruments'
@@ -60,15 +60,16 @@ export interface Part {
   label: string
   cost: number
   scoreBonus: number // instruments/booster: 탐사마다 고정 보너스
-  successChanceBonus: number // 0-1, 탐사 성공 확률에 더해짐
+  fuelBonus: number // 접근 미니게임에서 쓸 수 있는 연료 보너스(초 단위)
+  toleranceBonus: number // 착륙 지점/궤도 허용 범위를 넓혀주는 보너스
   imageFile: string
   blurb: string
 }
 
 export const PARTS: Part[] = [
-  { id: 'booster', label: '추진 부스터', cost: 20, scoreBonus: 5, successChanceBonus: 0.07, imageFile: 'part-booster.svg', blurb: '추력과 적재량을 높여 탐사마다 약간의 추가 성과를 얻고, 항행 안정성도 높임.' },
-  { id: 'life-support', label: '생명유지 모듈', cost: 40, scoreBonus: 0, successChanceBonus: 0.05, imageFile: 'part-life-support.svg', blurb: '유인 탐사를 가능하게 함 - 유인으로 탐사하면 점수가 두 배. 이중 안전장치로 접근 미니게임도 조금 더 너그러워짐.' },
-  { id: 'instruments', label: '정밀 관측 장비', cost: 30, scoreBonus: 10, successChanceBonus: 0.08, imageFile: 'part-instruments.svg', blurb: '더 정확한 데이터를 수집해 탐사마다 추가 점수를 얻고, 정밀 접근으로 접근 미니게임도 더 쉬워짐.' },
+  { id: 'booster', label: '추진 부스터', cost: 20, scoreBonus: 5, fuelBonus: 15, toleranceBonus: 0, imageFile: 'part-booster.svg', blurb: '추력과 연료 탱크를 늘려 탐사마다 약간의 추가 성과를 얻고, 접근 미니게임에서 쓸 수 있는 연료도 늘어남.' },
+  { id: 'life-support', label: '생명유지 모듈', cost: 40, scoreBonus: 0, fuelBonus: 8, toleranceBonus: 0, imageFile: 'part-life-support.svg', blurb: '유인 탐사를 가능하게 함 - 유인으로 탐사하면 점수가 두 배. 이중 안전장치로 예비 연료도 조금 더 실림.' },
+  { id: 'instruments', label: '정밀 관측 장비', cost: 30, scoreBonus: 10, fuelBonus: 0, toleranceBonus: 12, imageFile: 'part-instruments.svg', blurb: '더 정확한 데이터를 수집해 탐사마다 추가 점수를 얻고, 정밀 접근으로 착륙/궤도 목표 범위도 넓어짐.' },
 ]
 
 export interface RankTitle {
@@ -100,11 +101,10 @@ export const MISSION_PHASES: string[] = [
 
 // 최종 접근 미니게임에서 실제로 무엇이 잘못됐는지에 맞춘 실패 문구.
 export const APPROACH_FAILURE_REASONS: Record<ApproachFailureReason, string> = {
-  overspeed: '하강 속도가 너무 빨라 착륙 중 충돌했습니다.',
-  'out-of-fuel': '너무 조심스럽게 하강하다 연료를 다 써버려 착륙에 실패했습니다.',
-  'too-early': '감속을 너무 일찍 시작해 궤도를 벗어나지 못하고 대기권에 끌려 들어갔습니다.',
-  'too-late': '감속이 늦어 궤도 진입 창을 놓치고 우주로 날아가 버렸습니다.',
-  timeout: '제때 반응하지 못해 접근에 실패했습니다.',
+  'off-target': '착륙 지점을 벗어난 채로 내려앉았습니다.',
+  overspeed: '착지 속도가 너무 빨라 충돌했습니다.',
+  'out-of-fuel': '연료가 바닥나 접근에 실패했습니다.',
+  crashed: '궤도 반경이 너무 줄어들어 행성과 충돌했습니다.',
 }
 
 export function rankForScore(score: number): string {
