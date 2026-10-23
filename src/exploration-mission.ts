@@ -1,8 +1,10 @@
 import type { StelInstance } from './engine'
-import { MISSION_PHASES, MISSION_FAILURE_REASONS, PROBE_TIERS, SHIP_TIERS, EARTH_GLOBE_TEXTURE_FILE } from './exploration-data'
+import { MISSION_PHASES, APPROACH_FAILURE_REASONS, PROBE_TIERS, SHIP_TIERS, EARTH_GLOBE_TEXTURE_FILE } from './exploration-data'
 import { PHOTO_SUBJECTS } from './photo-subjects'
-import { getMissionSuccessChance, exploreTarget, getProbeTier } from './exploration-state'
+import { getApproachEasiness, exploreTarget, getProbeTier } from './exploration-state'
 import { createSoundToggle, playLaunchSound, playMissionMusic, playMissionSuccess, playMissionFailure } from './sound'
+import { runApproachMinigame } from './approach-minigame'
+import type { ApproachResult } from './approach-minigame-sim'
 
 const LAUNCH_DURATION_MS = 1_200 // 지구 옆에서 분사하며 이륙 준비하는 시간
 // 우주선이 목표까지 거리의 90%에 도달할 때까지 걸리는 시간, 그리고 탐사선이
@@ -65,16 +67,14 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
     })
   }
 
-  function resolveMission(designation: string, crewed: boolean) {
-    const succeeded = Math.random() < getMissionSuccessChance(designation)
-
-    if (!succeeded) {
+  function resolveMission(designation: string, crewed: boolean, approach: ApproachResult) {
+    if (!approach.success) {
       playMissionFailure()
-      const reason = MISSION_FAILURE_REASONS[Math.floor(Math.random() * MISSION_FAILURE_REASONS.length)]
+      const reason = APPROACH_FAILURE_REASONS[approach.reason]
       showReveal(`
         <h2>🚨 탐사 실패</h2>
         <p class="mission-fail-reason">${reason}</p>
-        <p class="mission-fail-note">장비를 보강하면 성공 확률이 올라갑니다. 다시 도전해 보세요!</p>
+        <p class="mission-fail-note">장비를 보강하면 접근 미니게임이 더 쉬워집니다. 다시 도전해 보세요!</p>
       `)
       return
     }
@@ -167,7 +167,9 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
       setTimeout(() => {
         phaseTimers.forEach(clearTimeout)
         flightOverlay.classList.remove('visible')
-        resolveMission(designation, crewed)
+        runApproachMinigame(ship!.approachKind, getApproachEasiness(designation)).then((approach) => {
+          resolveMission(designation, crewed, approach)
+        })
       }, FLIGHT_DURATION_MS)
     }, LAUNCH_DURATION_MS)
   }

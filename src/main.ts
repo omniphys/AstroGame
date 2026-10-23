@@ -11,6 +11,7 @@ import { createPhotoMode } from './photo-mode'
 import { createExplorationMode } from './exploration-mode'
 import { createSoundToggle, installButtonClickSound } from './sound'
 import { loadKoDict, ko } from './i18n'
+import { isApproachMinigameActive } from './approach-minigame'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <canvas id="stel-canvas" style="width:100vw;height:100vh;display:block;"></canvas>
@@ -102,7 +103,7 @@ async function main() {
   // Space centers and smoothly locks the view on whatever is selected
   // (clicking an object on the canvas sets core.selection automatically).
   window.addEventListener('keydown', (e) => {
-    if (e.code !== 'Space' || !core.selection) return
+    if (e.code !== 'Space' || !core.selection || isApproachMinigameActive()) return
     e.preventDefault()
     stel.pointAndLock(core.selection, 1.0)
   })

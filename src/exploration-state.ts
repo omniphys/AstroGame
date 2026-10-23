@@ -93,8 +93,10 @@ export function buyPart(id: PartId): boolean {
   return true
 }
 
-// 0-1 확률. 장비(탐사선 단계 + 부품)가 좋을수록 성공률이 올라감, 95%로 상한.
-export function getMissionSuccessChance(designation: string): number {
+// 0-0.95. 최종 성공/실패는 더 이상 이 값을 굴려서 정하지 않음 - 접근
+// 미니게임을 얼마나 너그럽게(중력/안전 속도, 안전 구간 폭 등) 만들지
+// 정하는 값. 장비(탐사선 단계 + 부품)가 좋을수록 높아져 미니게임이 쉬워짐.
+export function getApproachEasiness(designation: string): number {
   const shipEntry = SHIP_TIERS.find((s) => s.designation === designation)
   if (!shipEntry) return 0
 
