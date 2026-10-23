@@ -20,6 +20,7 @@ function readMuted(): boolean {
 
 function renderToggle(button: HTMLButtonElement) {
   button.textContent = muted ? '🔇 소리 꺼짐' : '🔊 소리 켜짐'
+  button.classList.toggle('sound-toggle-muted', muted)
 }
 
 // 주 메뉴와 탐사 비행 화면에 각각 버튼이 있으므로, 어느 쪽을 눌러도 모든

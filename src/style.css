@@ -541,6 +541,9 @@ body,
   display: flex;
 }
 
+/* 입장 버튼(.exploration-button)과 같은 철강빛 남색 + 호박 톤을 패널에도
+   입혀서, 열었을 때 다른 팝업(촬영 결과 등)과 같은 회색 유리로 섞이지
+   않고 "관제실에 들어왔다"는 느낌이 이어지도록 함. */
 #exploration-panel {
   position: relative;
   width: min(1000px, calc(100vw - 32px));
@@ -548,8 +551,9 @@ body,
   overflow-y: auto;
   padding: 20px;
   border-radius: 14px;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(15, 15, 22, 0.95);
+  border: 1px solid rgba(255, 181, 71, 0.35);
+  background: linear-gradient(165deg, rgba(42, 78, 116, 0.9), rgba(17, 32, 54, 0.95) 55%, rgba(8, 13, 22, 0.97));
+  box-shadow: 0 0 40px rgba(255, 170, 60, 0.1);
   backdrop-filter: blur(10px);
   color: rgba(255, 255, 255, 0.9);
 }
@@ -742,6 +746,10 @@ body,
   display: flex;
 }
 
+/* 좌상단 천체 선택(.object-search-select)과 같은 청록 계열 억양을 줘서,
+   켜져 있을 때는 다른 상단 버튼들과 한 묶음으로 보이게 함. 꺼졌을 때는
+   억양 없이 원래의 무채색 pill로 돌아가 "지금은 조용하다"는 상태가
+   색으로도 드러나도록 함. */
 .sound-toggle {
   position: fixed;
   top: 16px;
@@ -749,11 +757,22 @@ body,
   z-index: 10;
   padding: 8px 14px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  background: rgba(20, 20, 30, 0.6);
+  border: 1px solid rgba(110, 220, 255, 0.5);
+  background: rgba(20, 45, 55, 0.6);
   color: rgba(255, 255, 255, 0.85);
   font-size: 13px;
   cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: background 0.15s, border-color 0.15s;
+}
+
+.sound-toggle:hover {
+  border-color: rgba(150, 235, 255, 0.85);
+}
+
+.sound-toggle.sound-toggle-muted {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: rgba(20, 20, 30, 0.6);
 }
 
 .mission-track {
