@@ -1,10 +1,10 @@
 import type { StelInstance } from './engine'
-import { MISSION_PHASES, APPROACH_FAILURE_REASONS, PROBE_TIERS, SHIP_TIERS, EARTH_GLOBE_TEXTURE_FILE } from './exploration-data'
+import { MISSION_PHASES, APPROACH_FAILURE_REASONS, PROBE_TIERS, SHIP_TIERS, EARTH_GLOBE_TEXTURE_FILE, type ShipTier } from './exploration-data'
 import { PHOTO_SUBJECTS } from './photo-subjects'
 import { getBaseEasiness, getFuelBonus, getToleranceBonus, exploreTarget, getProbeTier } from './exploration-state'
 import { createSoundToggle, playLaunchSound, playMissionMusic, playMissionSuccess, playMissionFailure } from './sound'
 import { runApproachMinigame } from './approach-minigame'
-import type { ApproachResult } from './approach-minigame-sim'
+import type { ApproachResult, ApproachTuning } from './approach-minigame-sim'
 
 const LAUNCH_DURATION_MS = 1_200 // 지구 옆에서 분사하며 이륙 준비하는 시간
 // 우주선이 목표까지 거리의 90%에 도달할 때까지 걸리는 시간, 그리고 탐사선이
@@ -58,24 +58,50 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
   const progressFill = flightOverlay.querySelector<HTMLDivElement>('.mission-progress-fill')!
   flightOverlay.appendChild(createSoundToggle('sound-toggle'))
 
-  function showReveal(html: string) {
-    revealOverlay.innerHTML = `<div id="mission-reveal-card">${html}<button id="mission-reveal-close">확인</button></div>`
+  function showReveal(html: string, onRetry?: () => void) {
+    revealOverlay.innerHTML = `<div id="mission-reveal-card">${html}</div>`
     revealOverlay.classList.add('visible')
     revealOverlay.querySelector('#mission-reveal-close')!.addEventListener('click', () => {
       revealOverlay.classList.remove('visible')
       onResolved()
     })
+    if (onRetry) {
+      revealOverlay.querySelector('#mission-reveal-retry')!.addEventListener('click', () => {
+        revealOverlay.classList.remove('visible')
+        onRetry()
+      })
+    }
   }
 
-  function resolveMission(designation: string, crewed: boolean, approach: ApproachResult) {
+  // 실패했을 때는 발사부터 다시 보여주는 게 아니라, 미니게임 자체를 처음부터
+  // 다시 시작한다 - 탐사과정 애니메이션(발사-항행-분리)을 또 거치게 하면
+  // 재도전할 때마다 10초 넘게 기다려야 해서 체감 난이도만 올라갈 뿐이다.
+  function attempt(designation: string, crewed: boolean, ship: ShipTier, tuning: ApproachTuning) {
+    runApproachMinigame(ship.approachKind, tuning, {
+      planetTextureFile: ship.globeTextureFile,
+      landingSurfaceKind: ship.landingSurfaceKind,
+      landingSurfaceColor: ship.landingSurfaceColor,
+    }).then((approach) => {
+      resolveMission(designation, crewed, ship, tuning, approach)
+    })
+  }
+
+  function resolveMission(designation: string, crewed: boolean, ship: ShipTier, tuning: ApproachTuning, approach: ApproachResult) {
     if (!approach.success) {
       playMissionFailure()
       const reason = APPROACH_FAILURE_REASONS[approach.reason]
-      showReveal(`
+      showReveal(
+        `
         <h2>🚨 탐사 실패</h2>
         <p class="mission-fail-reason">${reason}</p>
-        <p class="mission-fail-note">장비를 보강하면 접근 미니게임이 더 쉬워집니다. 다시 도전해 보세요!</p>
-      `)
+        <p class="mission-fail-note">장비를 보강하면 접근 미니게임이 더 쉬워집니다.</p>
+        <div class="mission-reveal-actions">
+          <button id="mission-reveal-retry">다시 도전</button>
+          <button id="mission-reveal-close">탐사 목록으로</button>
+        </div>
+      `,
+        () => attempt(designation, crewed, ship, tuning),
+      )
       return
     }
 
@@ -100,6 +126,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
       <p class="mission-success-note">탐사선이 보내온 새로운 관측 데이터입니다${crewed ? ' (유인 탐사 +2배 점수)' : ''}:</p>
       ${discoveryHtml}
       <p class="mission-score-note">+${awarded}점 획득</p>
+      <button id="mission-reveal-close">확인</button>
     `)
   }
 
@@ -172,9 +199,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
           fuelBonus: getFuelBonus(),
           toleranceBonus: getToleranceBonus(),
         }
-        runApproachMinigame(ship!.approachKind, tuning).then((approach) => {
-          resolveMission(designation, crewed, approach)
-        })
+        attempt(designation, crewed, ship!, tuning)
       }, FLIGHT_DURATION_MS)
     }, LAUNCH_DURATION_MS)
   }

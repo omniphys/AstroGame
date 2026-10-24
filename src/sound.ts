@@ -229,6 +229,54 @@ export function playMissionMusic(durationMs: number, separationMs: number) {
   }, durationMs + 3000)
 }
 
+// 접근 미니게임의 분사기 소리 - 화면에 보이는 분사기가 몇 개든 눌려 있는 동안
+// 하나의 반복 재생 가스 분사음으로 표현하고, setActive로 켜고 끈다.
+export function createThrustLoop(): { setActive: (active: boolean) => void; stop: () => void } {
+  let nodes: { noise: AudioBufferSourceNode; gain: GainNode } | null = null
+  let active = false
+
+  function ensureStarted() {
+    const audio = getAudio()
+    if (!audio || nodes) return
+    const { ctx, master } = audio
+    const noise = ctx.createBufferSource()
+    noise.buffer = noiseBuffer(ctx, 2, false)
+    noise.loop = true
+    const filter = ctx.createBiquadFilter()
+    filter.type = 'bandpass'
+    filter.Q.value = 0.9
+    filter.frequency.value = 1500
+    const gain = ctx.createGain()
+    gain.gain.value = 0.0001
+    noise.connect(filter).connect(gain).connect(master)
+    noise.start()
+    nodes = { noise, gain }
+  }
+
+  return {
+    setActive(next: boolean) {
+      if (next === active) return
+      active = next
+      const audio = getAudio()
+      if (!audio) return
+      if (active) ensureStarted()
+      if (!nodes) return
+      const { ctx } = audio
+      nodes.gain.gain.cancelScheduledValues(ctx.currentTime)
+      nodes.gain.gain.setTargetAtTime(active ? 0.2 : 0.0001, ctx.currentTime, active ? 0.02 : 0.05)
+    },
+    stop() {
+      if (nodes) {
+        nodes.noise.stop()
+        nodes.noise.disconnect()
+        nodes.gain.disconnect()
+        nodes = null
+      }
+      active = false
+    },
+  }
+}
+
 function tone(freq: number, at: number, length: number, opts: { type?: OscillatorType; level?: number; out?: AudioNode } = {}) {
   const audio = getAudio()
   if (!audio) return

@@ -1,7 +1,7 @@
 // 이미지는 public/items/*.svg 실제 파일을 참조 - 나중에 다른 그림으로 바꾸고
 // 싶으면 같은 경로에 파일만 교체하면 됨(코드 수정 불필요).
 
-import type { ApproachKind, ApproachFailureReason } from './approach-minigame-sim'
+import type { ApproachKind, ApproachFailureReason, LandingSurfaceKind } from './approach-minigame-sim'
 
 export interface ShipTier {
   tier: number // 1-8, 누적 소유(8단계를 사면 1-7단계도 전부 보유한 것으로 침)
@@ -18,16 +18,20 @@ export interface ShipTier {
   // 달리 작은 원형 아이콘으로 쓰기 좋게 구형 맵이라 비행 애니메이션의 출발/도착
   // 마커에는 이쪽을 씀.
   globeTextureFile: string
+  // approachKind가 'landing'인 천체에서만 쓰임 - 착륙 미니게임의 지면을 그
+  // 천체 표면처럼 보이게 그리는 데 쓰는 질감 종류와 기본 색.
+  landingSurfaceKind?: LandingSurfaceKind
+  landingSurfaceColor?: string
   blurb: string
 }
 
 // 현대 발사체/추진 기술에 느슨하게 기반한 이름 + SF 느낌 가미. 수성이 금성보다
 // 기본점수가 높은 건 실제로 수성 도달에 더 많은 델타V가 필요하기 때문.
 export const SHIP_TIERS: ShipTier[] = [
-  { tier: 1, label: '루나 I호', designation: 'NAME Moon', targetLabel: '달', cost: 15, baseScore: 10, baseEasiness: 0.9, approachKind: 'landing', imageFile: 'ship-1.svg', globeTextureFile: '2k_moon.jpg', blurb: '화학 추진 로켓. 지구 저궤도를 넘어 달까지 보낼 수 있는 첫 발사체.' },
-  { tier: 2, label: '헬리오스 드라이브', designation: 'NAME Mercury', targetLabel: '수성', cost: 20, baseScore: 25, baseEasiness: 0.65, approachKind: 'landing', imageFile: 'ship-2.svg', globeTextureFile: '2k_mercury.jpg', blurb: '태양 근접 궤도에 진입하려면 막대한 감속이 필요해 오히려 화성보다 어려운 목적지.' },
-  { tier: 3, label: '금성 내열 글라이더', designation: 'NAME Venus', targetLabel: '금성', cost: 20, baseScore: 20, baseEasiness: 0.75, approachKind: 'landing', imageFile: 'ship-3.svg', globeTextureFile: '2k_venus_surface.jpg', blurb: '고온·고압 대기를 견디는 내열 차폐막을 두른 궤도선.' },
-  { tier: 4, label: '레드 패스파인더', designation: 'NAME Mars', targetLabel: '화성', cost: 25, baseScore: 20, baseEasiness: 0.75, approachKind: 'landing', imageFile: 'ship-4.svg', globeTextureFile: '2k_mars.jpg', blurb: '착륙 보조 추진체가 달린 화성 개척용 발사체.' },
+  { tier: 1, label: '루나 I호', designation: 'NAME Moon', targetLabel: '달', cost: 15, baseScore: 10, baseEasiness: 0.9, approachKind: 'landing', imageFile: 'ship-1.svg', globeTextureFile: '2k_moon.jpg', landingSurfaceKind: 'cratered', landingSurfaceColor: '#9a9a9a', blurb: '화학 추진 로켓. 지구 저궤도를 넘어 달까지 보낼 수 있는 첫 발사체.' },
+  { tier: 2, label: '헬리오스 드라이브', designation: 'NAME Mercury', targetLabel: '수성', cost: 20, baseScore: 25, baseEasiness: 0.65, approachKind: 'landing', imageFile: 'ship-2.svg', globeTextureFile: '2k_mercury.jpg', landingSurfaceKind: 'cratered', landingSurfaceColor: '#8c7a6b', blurb: '태양 근접 궤도에 진입하려면 막대한 감속이 필요해 오히려 화성보다 어려운 목적지.' },
+  { tier: 3, label: '금성 내열 글라이더', designation: 'NAME Venus', targetLabel: '금성', cost: 20, baseScore: 20, baseEasiness: 0.75, approachKind: 'landing', imageFile: 'ship-3.svg', globeTextureFile: '2k_venus_surface.jpg', landingSurfaceKind: 'hazy', landingSurfaceColor: '#e3cf7a', blurb: '고온·고압 대기를 견디는 내열 차폐막을 두른 궤도선.' },
+  { tier: 4, label: '레드 패스파인더', designation: 'NAME Mars', targetLabel: '화성', cost: 25, baseScore: 20, baseEasiness: 0.75, approachKind: 'landing', imageFile: 'ship-4.svg', globeTextureFile: '2k_mars.jpg', landingSurfaceKind: 'desert', landingSurfaceColor: '#b2502f', blurb: '착륙 보조 추진체가 달린 화성 개척용 발사체.' },
   { tier: 5, label: '갈릴레오 Ⅱ 중추진선', designation: 'NAME Jupiter', targetLabel: '목성', cost: 35, baseScore: 40, baseEasiness: 0.6, approachKind: 'orbit', imageFile: 'ship-5.svg', globeTextureFile: '2k_jupiter.jpg', blurb: '강한 중력권을 돌파할 대형 추진 모듈을 장착.' },
   { tier: 6, label: '크로노스 게이트', designation: 'NAME Saturn', targetLabel: '토성', cost: 40, baseScore: 50, baseEasiness: 0.55, approachKind: 'orbit', imageFile: 'ship-6.svg', globeTextureFile: '2k_saturn.jpg', blurb: '고리 궤도를 안전하게 통과하는 항법 보정 링 탑재.' },
   { tier: 7, label: '아이스 자이언트 익스플로러', designation: 'NAME Uranus', targetLabel: '천왕성', cost: 50, baseScore: 65, baseEasiness: 0.45, approachKind: 'orbit', imageFile: 'ship-7.svg', globeTextureFile: '2k_uranus.jpg', blurb: '장거리 항행을 위한 이온 추진 엔진 실험기.' },
@@ -105,6 +109,7 @@ export const APPROACH_FAILURE_REASONS: Record<ApproachFailureReason, string> = {
   overspeed: '착지 속도가 너무 빨라 충돌했습니다.',
   'out-of-fuel': '연료가 바닥나 접근에 실패했습니다.',
   crashed: '궤도 반경이 너무 줄어들어 행성과 충돌했습니다.',
+  escaped: '속도를 너무 많이 높여 궤도를 벗어나 우주로 날아가 버렸습니다.',
 }
 
 export function rankForScore(score: number): string {
