@@ -4,11 +4,13 @@
 // Catalog designations (M31, HIP 1234, ...) and anything else not in the
 // dictionary are left as-is, per design - there's no good Korean name for
 // those anyway.
+import { assetUrl } from './base-url'
+
 let dict: Record<string, string> | null = null
 
 export async function loadKoDict(): Promise<void> {
   try {
-    const res = await fetch('/i18n/skyculture-ko.json')
+    const res = await fetch(assetUrl('/i18n/skyculture-ko.json'))
     dict = await res.json()
   } catch {
     dict = {}

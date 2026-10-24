@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { createLabelSprite } from './label-sprite'
+import { assetUrl } from './base-url'
 
 // public/textures/milkyway_gaia.jpg: a face-on illustration of the Milky Way
 // built from real ESA Gaia mission star-survey data (credit: ESA/Gaia/DPAC,
@@ -8,7 +9,7 @@ import { createLabelSprite } from './label-sprite'
 // Cropped from ESA's "You are here" (2022) release, with its English
 // "YOU ARE HERE" callout removed (point-symmetric clone-patch) so our own
 // Korean marker/label can be placed on it instead.
-const GALAXY_TEXTURE = '/textures/milkyway_gaia.jpg'
+const GALAXY_TEXTURE = assetUrl('/textures/milkyway_gaia.jpg')
 // The source image has a lot of empty black margin around the actual
 // galaxy (radial brightness sampling put the visible disc's edge at
 // roughly 52% of the frame's half-width) - mapping the full square to

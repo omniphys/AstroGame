@@ -13,6 +13,7 @@ import {
 import { createMissionRunner } from './exploration-mission'
 import { getPoints } from './points'
 import { playPurchase, playDenied } from './sound'
+import { assetUrl } from './base-url'
 
 function playPurchaseResult(bought: boolean) {
   if (bought) playPurchase()
@@ -28,7 +29,7 @@ function itemCardHtml(opts: {
 }): string {
   return `
     <div class="item-card">
-      <img class="item-icon" src="/items/${opts.imageFile}" alt="${opts.title}">
+      <img class="item-icon" src="${assetUrl(`/items/${opts.imageFile}`)}" alt="${opts.title}">
       <div class="item-info">
         <div class="item-title">${opts.title}</div>
         <div class="item-blurb">${opts.blurb}</div>

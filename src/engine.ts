@@ -2,6 +2,8 @@
 // /public/engine/stellarium-web-engine.js (built from the Stellarium Web
 // Engine C/WASM sources). See README.md for how that file is produced.
 
+import { assetUrl } from './base-url'
+
 export interface StelWebEngineOptions {
   wasmFile: string;
   canvas: HTMLCanvasElement;
@@ -34,7 +36,7 @@ export function initStelEngine(
 
   return new Promise((resolve) => {
     window.StelWebEngine({
-      wasmFile: '/engine/stellarium-web-engine.wasm',
+      wasmFile: assetUrl('/engine/stellarium-web-engine.wasm'),
       canvas,
       translateFn,
       onReady: (stel) => resolve(stel),

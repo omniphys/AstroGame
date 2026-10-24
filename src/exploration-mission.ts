@@ -5,6 +5,7 @@ import { getBaseEasiness, getFuelBonus, getToleranceBonus, exploreTarget, getPro
 import { createSoundToggle, playLaunchSound, playMissionMusic, playMissionSuccess, playMissionFailure } from './sound'
 import { runApproachMinigame } from './approach-minigame'
 import type { ApproachResult, ApproachTuning } from './approach-minigame-sim'
+import { assetUrl } from './base-url'
 
 const LAUNCH_DURATION_MS = 1_200 // 지구 옆에서 분사하며 이륙 준비하는 시간
 // 우주선이 목표까지 거리의 90%에 도달할 때까지 걸리는 시간, 그리고 탐사선이
@@ -35,7 +36,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
   flightOverlay.id = 'mission-flight-overlay'
   flightOverlay.innerHTML = `
     <div class="mission-track">
-      <img class="mission-earth" src="/textures/planets/${EARTH_GLOBE_TEXTURE_FILE}" alt="지구">
+      <img class="mission-earth" src="${assetUrl(`/textures/planets/${EARTH_GLOBE_TEXTURE_FILE}`)}" alt="지구">
       <div class="mission-exhaust"></div>
       <img class="mission-ship">
       <img class="mission-probe">
@@ -116,7 +117,7 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
     const subject = PHOTO_SUBJECTS.find((s) => s.designation === designation)
     const discoveryHtml = subject
       ? `
-        <img class="mission-discovery-image" src="/photos/${subject.imageFile}" alt="${subject.label}">
+        <img class="mission-discovery-image" src="${assetUrl(`/photos/${subject.imageFile}`)}" alt="${subject.label}">
         <p class="mission-discovery-credit">사진: ${subject.credit}</p>
         <p class="mission-discovery-text">${subject.description}</p>
       `
@@ -134,9 +135,9 @@ export function createMissionRunner(stel: StelInstance, onResolved: () => void):
     const ship = SHIP_TIERS.find((s) => s.designation === designation)
     const probeTier = PROBE_TIERS[getProbeTier() - 1]
 
-    shipImg.src = `/items/${shipImageFile}`
-    probeImg.src = `/items/${(probeTier ?? PROBE_TIERS[0]).imageFile}`
-    planetMarker.src = ship ? `/textures/planets/${ship.globeTextureFile}` : ''
+    shipImg.src = assetUrl(`/items/${shipImageFile}`)
+    probeImg.src = assetUrl(`/items/${(probeTier ?? PROBE_TIERS[0]).imageFile}`)
+    planetMarker.src = ship ? assetUrl(`/textures/planets/${ship.globeTextureFile}`) : ''
     planetMarker.alt = ship?.targetLabel ?? ''
 
     // 초기 상태로 리셋 (발사 전: 우주선은 출발 지점에, 탐사선은 숨김, 분사 효과는

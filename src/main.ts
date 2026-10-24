@@ -12,6 +12,7 @@ import { createExplorationMode } from './exploration-mode'
 import { createSoundToggle, installButtonClickSound } from './sound'
 import { loadKoDict, ko } from './i18n'
 import { isApproachMinigameActive } from './approach-minigame'
+import { assetUrl } from './base-url'
 
 document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
   <canvas id="stel-canvas" style="width:100vw;height:100vh;display:block;"></canvas>
@@ -52,23 +53,23 @@ async function main() {
   // (no glyphs). Load a Hangul-capable font as a fallback for both faces -
   // this is additive (tried first, falls back to the built-in font for
   // glyphs it doesn't have), not a replacement.
-  stel.setFont('regular', '/fonts/NotoSansKR-Variable.ttf')
-  stel.setFont('bold', '/fonts/NotoSansKR-Variable.ttf')
+  stel.setFont('regular', assetUrl('/fonts/NotoSansKR-Variable.ttf'))
+  stel.setFont('bold', assetUrl('/fonts/NotoSansKR-Variable.ttf'))
 
   const core = stel.core
-  core.stars.addDataSource({ url: '/skydata/stars' })
-  core.skycultures.addDataSource({ url: '/skydata/skycultures/western', key: 'western' })
-  core.dsos.addDataSource({ url: '/skydata/dso' })
-  core.landscapes.addDataSource({ url: '/skydata/landscapes/guereins', key: 'guereins' })
-  core.milkyway.addDataSource({ url: '/skydata/surveys/milkyway' })
-  core.minor_planets.addDataSource({ url: '/skydata/mpcorb.dat', key: 'mpc_asteroids' })
-  core.planets.addDataSource({ url: '/skydata/surveys/sso/moon', key: 'moon' })
-  core.planets.addDataSource({ url: '/skydata/surveys/sso/sun', key: 'sun' })
+  core.stars.addDataSource({ url: assetUrl('/skydata/stars') })
+  core.skycultures.addDataSource({ url: assetUrl('/skydata/skycultures/western'), key: 'western' })
+  core.dsos.addDataSource({ url: assetUrl('/skydata/dso') })
+  core.landscapes.addDataSource({ url: assetUrl('/skydata/landscapes/guereins'), key: 'guereins' })
+  core.milkyway.addDataSource({ url: assetUrl('/skydata/surveys/milkyway') })
+  core.minor_planets.addDataSource({ url: assetUrl('/skydata/mpcorb.dat'), key: 'mpc_asteroids' })
+  core.planets.addDataSource({ url: assetUrl('/skydata/surveys/sso/moon'), key: 'moon' })
+  core.planets.addDataSource({ url: assetUrl('/skydata/surveys/sso/sun'), key: 'sun' })
   for (const [key, url] of Object.entries(PLANET_SURVEYS)) {
     core.planets.addDataSource({ url, key })
   }
-  core.comets.addDataSource({ url: '/skydata/CometEls.txt', key: 'mpc_comets' })
-  core.satellites.addDataSource({ url: '/skydata/tle_satellite.jsonl.gz', key: 'jsonl/sat' })
+  core.comets.addDataSource({ url: assetUrl('/skydata/CometEls.txt'), key: 'mpc_comets' })
+  core.satellites.addDataSource({ url: assetUrl('/skydata/tle_satellite.jsonl.gz'), key: 'jsonl/sat' })
   // Public CDS HiPS survey (not bundled - it's a huge tile pyramid fetched
   // live). Powers the "zoom in to see a real photo" effect; toggled off by
   // default via the DSS Photos button since it depends on third-party

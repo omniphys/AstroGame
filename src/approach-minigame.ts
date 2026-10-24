@@ -17,6 +17,7 @@ import {
   LANDING_CANVAS_HEIGHT,
 } from './approach-minigame-sim'
 import { createThrustLoop } from './sound'
+import { assetUrl } from './base-url'
 
 export interface ApproachVisuals {
   planetTextureFile?: string // public/textures/planets/*.jpg - 궤도 진입 미니게임에서만 사용
@@ -381,7 +382,7 @@ export function runApproachMinigame(kind: ApproachKind, tuning: ApproachTuning, 
     let planetImg: HTMLImageElement | null = null
     if (kind === 'orbit' && visuals.planetTextureFile) {
       planetImg = new Image()
-      planetImg.src = `/textures/planets/${visuals.planetTextureFile}`
+      planetImg.src = assetUrl(`/textures/planets/${visuals.planetTextureFile}`)
     }
 
     function finish(result: ApproachResult) {

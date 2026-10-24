@@ -1,5 +1,6 @@
 import type { PhotoSubject } from './photo-subjects'
 import { getPoints, hasCompleted, markCompleted } from './points'
+import { assetUrl } from './base-url'
 
 export function createPhotoPopup(onPointsChange: (points: number) => void): (subject: PhotoSubject) => void {
   const backdrop = document.createElement('div')
@@ -35,7 +36,7 @@ export function createPhotoPopup(onPointsChange: (points: number) => void): (sub
   })
 
   function render(subject: PhotoSubject) {
-    image.src = `/photos/${subject.imageFile}`
+    image.src = assetUrl(`/photos/${subject.imageFile}`)
     image.alt = subject.label
     credit.textContent = `사진: ${subject.credit}`
 

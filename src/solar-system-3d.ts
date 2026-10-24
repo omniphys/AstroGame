@@ -1,6 +1,7 @@
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
 import { createLabelSprite } from './label-sprite'
+import { assetUrl } from './base-url'
 
 interface PlanetElements {
   label: string
@@ -84,7 +85,7 @@ function tiltToWorld(planar: THREE.Vector2, inclinationDeg: number): THREE.Vecto
 }
 
 function loadPlanetTexture(loader: THREE.TextureLoader, file: string): THREE.Texture {
-  const texture = loader.load(`/textures/planets/${file}`)
+  const texture = loader.load(assetUrl(`/textures/planets/${file}`))
   texture.colorSpace = THREE.SRGBColorSpace
   return texture
 }
