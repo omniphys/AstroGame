@@ -45,7 +45,7 @@ const INTRO_TEXT: Record<ApproachKind, { title: string; controls: string[]; blur
   },
   orbit: {
     title: '🛰️ 궤도 진입 미션',
-    controls: ['↑ 진행 방향으로 분사(프로그레이드) → 속도 증가', '↓ 진행 방향과 반대로 분사(레트로그레이드) → 속도 감소'],
+    controls: ['↑ 진행 방향과 반대로 분사(레트로그레이드) → 속도 감소', '↓ 진행 방향으로 분사(프로그레이드) → 속도 증가'],
     blurb: '탐사선은 지금 행성 둘레를 원운동하고 있습니다. 속도를 바꾸면 궤도가 타원으로 늘어졌다가, 시간이 지나며 그 속도에 맞는 원 궤도로 자연스럽게 둥글어집니다. 그 원 궤도가 목표 범위 안에 들어오면 한 바퀴 돌 때까지 유지해야 성공입니다. 연료도 시간 제한도 없으니 천천히 맞춰 보세요. 다만 속도를 너무 줄이면 행성에 충돌하고, 너무 높이면 궤도를 벗어나 화면 밖으로 날아가 버립니다.',
     startLabel: '진입 시작',
   },
@@ -484,7 +484,7 @@ export function runApproachMinigame(kind: ApproachKind, tuning: ApproachTuning, 
         lastTs = ts
         const keys = { up: heldKeys.has('ArrowUp'), down: heldKeys.has('ArrowDown') }
         state = stepOrbit(state, dtMs, keys, params)
-        const firing = { prograde: keys.up && !keys.down, retrograde: keys.down && !keys.up }
+        const firing = { prograde: keys.down && !keys.up, retrograde: keys.up && !keys.down }
         thrustLoop.setActive(firing.prograde || firing.retrograde)
         drawOrbit(ctx, state, params, planetImg, firing)
 

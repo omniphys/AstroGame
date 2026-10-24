@@ -210,9 +210,10 @@ export function landingOutcome(state: LandingState, params: LandingParams): Appr
 // --- 궤도 진입 (가스/얼음 거대행성) ---
 //
 // 반경을 직접 조작하는 추상화 대신, 탐사선의 위치/속도와 행성 중력(역제곱
-// 법칙)을 그대로 적분하는 2체 문제로 시뮬레이션한다. ↑(프로그레이드)는 속도
-// 벡터 방향으로, ↓(레트로그레이드)는 그 반대 방향으로 가속해 속도를 늘리거나
-// 줄인다 - 분사 직후 한 프레임만 보면 물리적으로 정확한 타원 궤도 운동 그
+// 법칙)을 그대로 적분하는 2체 문제로 시뮬레이션한다. ↓(프로그레이드, 뒤쪽에서
+// 앞으로 분사)는 속도 벡터 방향으로, ↑(레트로그레이드, 앞쪽에서 뒤로 분사)는
+// 그 반대 방향으로 가속해 속도를 늘리거나 줄인다 - 분사 직후 한 프레임만 보면
+// 물리적으로 정확한 타원 궤도 운동 그
 // 자체지만(중력만 받는 진짜 2체 적분), 매 프레임 속도의 반경 방향 성분만
 // 지수적으로(radialDamping의 속도로, 순간이동이 아니라 몇 초에 걸쳐 "자연
 // 스럽게") 접선 방향(원운동) 성분 쪽으로 줄인다. 같은 위치를 기준으로 접선
@@ -249,8 +250,8 @@ export interface OrbitState {
 }
 
 export interface OrbitKeys {
-  up: boolean // 프로그레이드 분사 - 속도 증가
-  down: boolean // 레트로그레이드 분사 - 속도 감소
+  up: boolean // 레트로그레이드 분사(앞쪽에서 뒤로) - 속도 감소
+  down: boolean // 프로그레이드 분사(뒤쪽에서 앞으로) - 속도 증가
 }
 
 export const ORBIT_TARGET_RADIUS = 90
@@ -299,8 +300,8 @@ export function stepOrbit(state: OrbitState, dtMs: number, keys: OrbitKeys, para
   const ay = r > 0 ? (-params.gm * state.y) / (r * r * r) : 0
 
   let thrustSign = 0
-  if (keys.up && !keys.down) thrustSign = 1
-  else if (keys.down && !keys.up) thrustSign = -1
+  if (keys.down && !keys.up) thrustSign = 1
+  else if (keys.up && !keys.down) thrustSign = -1
   let thrustAx = 0
   let thrustAy = 0
   if (thrustSign !== 0 && speed > 0) {

@@ -267,18 +267,18 @@ test('stepOrbit pulls the ship toward the planet by gravity when no thrust is he
   assert.equal(next.y, 0)
 })
 
-test('stepOrbit speeds the ship up along its direction of travel when up (prograde) is held', () => {
+test('stepOrbit speeds the ship up along its direction of travel when down (prograde) is held', () => {
   const state = { x: 100, y: 0, vx: 0, vy: 100, holdMs: 0 }
-  const next = stepOrbit(state, 1000, { up: true, down: false }, ORBIT_TEST_PARAMS_NO_DAMPING)
+  const next = stepOrbit(state, 1000, { up: false, down: true }, ORBIT_TEST_PARAMS_NO_DAMPING)
   assert.equal(next.vx, -100)
   assert.equal(next.vy, 120)
   assert.equal(next.x, 0)
   assert.equal(next.y, 120)
 })
 
-test('stepOrbit slows the ship down along its direction of travel when down (retrograde) is held', () => {
+test('stepOrbit slows the ship down along its direction of travel when up (retrograde) is held', () => {
   const state = { x: 100, y: 0, vx: 0, vy: 100, holdMs: 0 }
-  const next = stepOrbit(state, 1000, { up: false, down: true }, ORBIT_TEST_PARAMS_NO_DAMPING)
+  const next = stepOrbit(state, 1000, { up: true, down: false }, ORBIT_TEST_PARAMS_NO_DAMPING)
   assert.equal(next.vx, -100)
   assert.equal(next.vy, 80)
   assert.equal(next.y, 80)
@@ -298,7 +298,7 @@ test('stepOrbit has no fuel gate at all - thrust still applies after a long time
   const params = { ...ORBIT_TEST_PARAMS_NO_DAMPING }
   let state = { x: 100, y: 0, vx: 0, vy: 100, holdMs: 0 }
   const initialSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy)
-  for (let t = 0; t < 5000; t += 16) state = stepOrbit(state, 16, { up: true, down: false }, params)
+  for (let t = 0; t < 5000; t += 16) state = stepOrbit(state, 16, { up: false, down: true }, params)
   const finalSpeed = Math.sqrt(state.vx * state.vx + state.vy * state.vy)
   assert.ok(finalSpeed > initialSpeed + 20, `5s of continuous prograde thrust should have sped the ship up a lot (${initialSpeed} -> ${finalSpeed})`)
 })
@@ -402,7 +402,7 @@ test('a single well-aimed burn followed by coasting reaches and holds the target
   let state = initialOrbitState(params)
   let burnMs = 0
   while (burnMs < 5000) {
-    const next = stepOrbit(state, 16, { up: false, down: true }, params)
+    const next = stepOrbit(state, 16, { up: true, down: false }, params)
     const circularRadiusForNext = (next.x * next.vy - next.y * next.vx) ** 2 / params.gm
     state = next
     burnMs += 16
