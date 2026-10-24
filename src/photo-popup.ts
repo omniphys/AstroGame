@@ -1,6 +1,7 @@
 import type { PhotoSubject } from './photo-subjects'
-import { getPoints, hasCompleted, markCompleted } from './points'
+import { getPoints, hasCompleted, hasFailedOnce, markCompleted, markFailed } from './points'
 import { assetUrl } from './base-url'
+import { playQuizCorrect, playDenied } from './sound'
 
 export function createPhotoPopup(onPointsChange: (points: number) => void): (subject: PhotoSubject) => void {
   const backdrop = document.createElement('div')
@@ -41,6 +42,7 @@ export function createPhotoPopup(onPointsChange: (points: number) => void): (sub
     credit.textContent = `사진: ${subject.credit}`
 
     const alreadyDone = hasCompleted(subject.designation)
+    const failedBefore = hasFailedOnce(subject.designation)
     const optionsHtml = subject.quiz.options
       .map(
         (option, i) =>
@@ -57,7 +59,13 @@ export function createPhotoPopup(onPointsChange: (points: number) => void): (sub
         <button class="quiz-submit" type="button">정답 확인</button>
         <p class="quiz-feedback"></p>
       </div>
-      ${alreadyDone ? '<p class="quiz-done-note">이미 완료한 천체입니다 - 복습은 몇 번이든 가능하지만 포인트는 한 번만 지급돼요.</p>' : ''}
+      ${
+        alreadyDone
+          ? '<p class="quiz-done-note">이미 완료한 천체입니다 - 복습은 몇 번이든 가능하지만 포인트는 한 번만 지급돼요.</p>'
+          : failedBefore
+            ? '<p class="quiz-done-note">이미 한 번 오답을 제출한 문제예요 - 복습은 가능하지만 포인트는 지급되지 않아요.</p>'
+            : ''
+      }
     `
 
     const feedback = body.querySelector<HTMLParagraphElement>('.quiz-feedback')!
@@ -72,14 +80,20 @@ export function createPhotoPopup(onPointsChange: (points: number) => void): (sub
 
       const correct = Number(picked.value) === subject.quiz.correctIndex
       if (!correct) {
+        // 오답을 한 번이라도 내면 정답을 알려주므로, 이후 다시 골라 맞혀도
+        // 실력이 아니라 암기이다 - markFailed로 영구히 포인트 지급 대상에서
+        // 빼서 hasCompleted와 같은 "한 번만" 규칙을 따르게 한다.
+        markFailed(subject.designation)
         feedback.textContent = `아쉬워요! 정답은 "${subject.quiz.options[subject.quiz.correctIndex]}"입니다.`
         feedback.className = 'quiz-feedback incorrect'
+        playDenied()
         return
       }
 
       const awarded = markCompleted(subject.designation)
-      feedback.textContent = awarded > 0 ? `정답입니다! +${awarded} 포인트 획득` : '정답입니다! (포인트는 이미 지급됨)'
+      feedback.textContent = awarded > 0 ? `정답입니다! +${awarded} 포인트 획득` : '정답입니다! (포인트는 지급되지 않아요)'
       feedback.className = 'quiz-feedback correct'
+      playQuizCorrect()
       onPointsChange(getPoints())
     })
   }

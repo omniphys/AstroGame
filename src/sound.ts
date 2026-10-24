@@ -304,6 +304,12 @@ export function playPurchase() {
   tone(1318.51, 0.08, 0.35, { type: 'square', level: 0.3 })
 }
 
+// 퀴즈 정답 - 배경음악과 같은 D 조성의 상승 아르페지오로 축하하는 느낌.
+export function playQuizCorrect() {
+  const notes = [587.33, 739.99, 880.0, 1174.66] // D5 F#5 A5 D6
+  notes.forEach((freq, i) => tone(freq, i * 0.08, 0.3, { type: 'triangle', level: 0.2 }))
+}
+
 // 낮고 탁한 음 두 번 - "안 돼요" 느낌의 버저.
 export function playDenied() {
   const audio = getAudio()
@@ -369,11 +375,11 @@ export function playShutter() {
 
 // 모든 버튼에 하나하나 리스너를 달지 않고 문서 전체에서 클릭을 받아 처리함 -
 // 탐사 기지처럼 innerHTML로 다시 그려지는 버튼에도 자동으로 적용됨. 구매/탐사
-// 버튼과 사진 촬영 버튼은 각자 더 구체적인 효과음을 내므로 제외.
+// 버튼, 사진 촬영 버튼, 퀴즈 제출 버튼은 각자 더 구체적인 효과음을 내므로 제외.
 export function installButtonClickSound() {
   document.addEventListener('click', (e) => {
     const button = (e.target as Element | null)?.closest('button')
-    if (!button || button.matches('.item-buy, #capture-button')) return
+    if (!button || button.matches('.item-buy, #capture-button, .quiz-submit')) return
     playClick()
   }, true)
 }
