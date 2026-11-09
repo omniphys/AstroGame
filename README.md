@@ -129,18 +129,34 @@ points `core.planets` at Stellarium's own hosted HiPS surveys
 for the rest, live third-party fetches like the DSS survey below. Zoom in on a planet to
 see it load (HiPS tiles only fetch once a body is close enough to be worth texturing).
 
-**DSS photos (zoomed-in imagery of arbitrary sky objects):** `src/main.ts` also points
-`core.dss` at the public CDS HiPS survey `https://alasky.cds.unistra.fr/DSS/DSSColor`
-(not bundled — it's a live, third-party, many-GB tile pyramid, always on, no toggle).
-The Sun/Moon's own bundled imagery and star/DSO rendering work without it.
+**DSS photos (zoomed-in real-photo imagery):** `core.dss` only ever holds one active
+survey — `add_data_source` replaces whatever was there, it doesn't layer. There are two
+candidates, and `src/main.ts` currently uses the second:
 
-That CDS server (Strasbourg, France) is not reachable from every network — confirmed
-unreachable (connection timeout / `Failed to fetch`, even a direct browser navigation to
-it fails to load) from at least one Korean ISP/work-network path, while
-`data.stellarium.org` (used for planet imagery and the DSO mirror above) was reachable
-fine from the same machine. If "zoom in for a real photo" isn't working, check this
-before assuming it's a code bug — `fetch('https://alasky.cds.unistra.fr/DSS/DSSColor/properties')`
-in the devtools console is a quick test.
+- The public CDS HiPS survey `https://alasky.cds.unistra.fr/DSS/DSSColor` — the whole
+  sky, but a live, third-party, many-GB fetch. That CDS server (Strasbourg, France) is
+  **not reachable from every network** — confirmed unreachable (connection timeout /
+  `Failed to fetch`, even a direct browser navigation to it fails to load) from at least
+  one Korean ISP/work-network path, while `data.stellarium.org` (used for planet imagery
+  and the DSO mirror above) was reachable fine from the same machine.
+  `fetch('https://alasky.cds.unistra.fr/DSS/DSSColor/properties')` in the devtools
+  console is a quick reachability test.
+- `public/skydata/nebula-dss/` (what's wired up now) — the *same* underlying survey
+  (CDS `P/DSS2/color`), but only the small patches of sky around 6 famous objects: M31,
+  M42, M45, M22, IC 434, IC 2118. Built by `tools/mirror-nebula-dss.cjs`, which downloads
+  the exact tiles covering each object directly from stellarium-web.org's own CDN mirror
+  of the same survey (`stellarium.sfo2.cdn.digitaloceanspaces.com`) — reachable from
+  networks where alasky isn't. That CDN's CORS is locked to `stellarium-web.org`
+  specifically so a *browser* on this site can't fetch from it, but CORS doesn't apply to
+  the script's server-side downloads, so the tiles themselves (already correctly
+  positioned HEALPix data, no reprojection needed) come down byte-for-byte. ~70MB, color,
+  real DSS imagery, works offline. Regenerate with `node tools/mirror-nebula-dss.cjs`.
+  Zooming in on any other nebula/galaxy won't show a real photo this way, just the DSO
+  catalog symbol (see above).
+
+To get the old behavior back (the real CDS survey, all-sky but possibly unreachable),
+swap the `core.dss.addDataSource` URL in `src/main.ts` back to
+`https://alasky.cds.unistra.fr/DSS/DSSColor`.
 
 **`.gz` data gotcha:** `tle_satellite.jsonl.gz` is gunzipped by the engine itself, not
 the browser. Some static file servers (Vite's dev server included — handled here via

@@ -1,0 +1,6 @@
+obs_description          = Local mirror of CDS P/DSS2/color (the real alasky DSS survey), downloaded tile-for-tile from stellarium-web.org's own CDN mirror - just the patches of sky around 6 famous nebulae/galaxies (M31, M42, M45, M22, IC 434, IC 2118), not the full sky.
+hips_release_date        = 2026-11-09T00:00Z
+hips_order_min           = 3
+hips_order               = 9
+hips_tile_width          = 512
+hips_tile_format         = webp

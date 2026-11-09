@@ -70,11 +70,14 @@ async function main() {
   }
   core.comets.addDataSource({ url: assetUrl('/skydata/CometEls.txt'), key: 'mpc_comets' })
   core.satellites.addDataSource({ url: assetUrl('/skydata/tle_satellite.jsonl.gz'), key: 'jsonl/sat' })
-  // Public CDS HiPS survey (not bundled - it's a huge tile pyramid fetched
-  // live). Powers the "zoom in to see a real photo" effect; toggled off by
-  // default via the DSS Photos button since it depends on third-party
-  // network access.
-  core.dss.addDataSource({ url: 'https://alasky.cds.unistra.fr/DSS/DSSColor' })
+  // core.dss only ever holds one active survey (addDataSource replaces
+  // whatever was there), so this is a choice between the real CDS DSS
+  // survey (https://alasky.cds.unistra.fr/DSS/DSSColor, the whole sky, but
+  // a live third-party fetch some networks can't reach at all - see
+  // README's "DSS photos" note) and this bundled one (always works, color,
+  // but only covers 6 famous nebulae/galaxies - built by
+  // tools/mirror-nebula-dss.cjs, see the same README note).
+  core.dss.addDataSource({ url: assetUrl('/skydata/nebula-dss') })
 
   // Constellation lines/art are hidden by default in the engine; turn lines on
   // so the sky doesn't look empty, and leave art as an opt-in toggle.
