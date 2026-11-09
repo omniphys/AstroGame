@@ -98,6 +98,31 @@ If you re-copy `apps/test-skydata/` after updating the submodule:
 rm -rf public/skydata && cp -r engine/stellarium-web-engine/apps/test-skydata public/skydata
 ```
 
+Note this wipes out the fuller DSO survey described below — re-apply it afterwards if
+you still want it.
+
+**DSO imagery (nebulae/galaxies):** `test-skydata`'s `dso/` only ships HiPS order 0 (one
+tile per sky octant), so zooming in on a nebula/galaxy just enlarges that single
+low-res tile instead of showing more detail — it looks blurry/broken up close. This repo's
+`public/skydata/dso/` has been replaced with a mirror of
+`https://data.stellarium.org/surveys/dso` through order 3 (~20MB, ~1000 tiles; many
+higher-order tiles 404 because that patch of sky has no catalogued DSOs — expected, not
+an error). Re-mirror it with:
+
+```sh
+for o in 0 1 2 3; do for n in $(seq 0 $(( 12 * 4**o - 1 ))); do
+  d=$(( (n/10000)*10000 ))
+  curl -sf -o "public/skydata/dso/Norder$o/Dir$d/Npix$n.eph" \
+    "https://data.stellarium.org/surveys/dso/Norder$o/Dir$d/Npix$n.eph" || \
+    rm -f "public/skydata/dso/Norder$o/Dir$d/Npix$n.eph"
+done; done
+```
+
+**DSS photos vs. this survey:** the "zoom in to see a real photo" effect (`core.dss`,
+below) is a *separate*, much higher-res live layer on top of this one. If nebulae still
+look wrong even after the above, check that the DSS Photos source is actually reachable —
+see the note under "DSS photos" below.
+
 **Planet imagery:** the bundled data only has Sun/Moon textures; `src/main.ts` also
 points `core.planets` at Stellarium's own hosted HiPS surveys
 (`https://data.stellarium.org/surveys/<mercury|venus|mars|jupiter|saturn|uranus|neptune>`)
@@ -106,9 +131,16 @@ see it load (HiPS tiles only fetch once a body is close enough to be worth textu
 
 **DSS photos (zoomed-in imagery of arbitrary sky objects):** `src/main.ts` also points
 `core.dss` at the public CDS HiPS survey `https://alasky.cds.unistra.fr/DSS/DSSColor`
-(not bundled — it's a live, third-party, many-GB tile pyramid). This is what the
-"DSS Photos" toolbar toggle controls; the Sun/Moon's own bundled imagery and star/DSO
-rendering work without it.
+(not bundled — it's a live, third-party, many-GB tile pyramid, always on, no toggle).
+The Sun/Moon's own bundled imagery and star/DSO rendering work without it.
+
+That CDS server (Strasbourg, France) is not reachable from every network — confirmed
+unreachable (connection timeout / `Failed to fetch`, even a direct browser navigation to
+it fails to load) from at least one Korean ISP/work-network path, while
+`data.stellarium.org` (used for planet imagery and the DSO mirror above) was reachable
+fine from the same machine. If "zoom in for a real photo" isn't working, check this
+before assuming it's a code bug — `fetch('https://alasky.cds.unistra.fr/DSS/DSSColor/properties')`
+in the devtools console is a quick test.
 
 **`.gz` data gotcha:** `tle_satellite.jsonl.gz` is gunzipped by the engine itself, not
 the browser. Some static file servers (Vite's dev server included — handled here via

@@ -1,6 +1,7 @@
-obs_description          = base DSO survey for Stellarium Web
-hips_release_date        = 2020-01-04T00:00Z
+obs_description          = DSO survey for Stellarium Web, mirrored from data.stellarium.org/surveys/dso (Norder0-3)
+hips_release_date        = 2018-08-30T14:42Z
 hips_order_min           = 0
+hips_order               = 3
 type                     = dso
 hips_tile_format         = eph
-skysource_sha256         = 572d7a9010f988ecfc668d506aa623d6399049abfa5ea8a83ad533950f7d92ce
+source_md5                = f31181c37448cb4ab8917b3c1fdaa4e8
