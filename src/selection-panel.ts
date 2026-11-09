@@ -94,31 +94,41 @@ export function createSelectionPanel(stel: StelInstance): void {
     const isStar = !!md && (typeof md.BVMag === 'number' || typeof md.spect_t === 'string')
 
     let rows = row('종류', describeType(obj))
-    if (typeof vmag === 'number' && isFinite(vmag)) {
-      rows += row('겉보기 등급', vmag.toFixed(2))
-    }
-    if (typeof distanceAu === 'number' && isFinite(distanceAu)) {
-      rows += row('거리', formatDistance(distanceAu))
-      if (isStar && typeof vmag === 'number' && isFinite(vmag)) {
-        rows += row('절대 등급', absoluteMagnitude(vmag, distanceAu).toFixed(2))
+    if (isStar) {
+      // 별은 연주시차 -> 거리 -> 겉보기 등급 -> 절대 등급 -> 색지수 -> 표면온도 순.
+      if (md && typeof md.plx === 'number' && isFinite(md.plx) && md.plx > 0) {
+        rows += row('연주시차', `${(md.plx / 1000).toFixed(3)}″`)
       }
-    }
-    if (md && typeof md.plx === 'number' && isFinite(md.plx) && md.plx > 0) {
-      rows += row('연주시차', `${md.plx.toFixed(2)} mas`)
-    }
-    if (md && typeof md.spect_t === 'string' && md.spect_t) {
-      rows += row('분광형', md.spect_t)
-    }
-    if (md && typeof md.BVMag === 'number') {
-      const color = bvToColor(md.BVMag)
-      rows += row(
-        `색지수 (B-V ${md.BVMag.toFixed(2)})`,
-        `<span class="swatch" style="background:${color}"></span>`,
-      )
-      rows += row('표면온도', `약 ${Math.round(temperatureFromBV(md.BVMag))} K`)
-    }
-    if (md && typeof md.morpho === 'string' && md.morpho) {
-      rows += row('형태 분류', md.morpho)
+      if (typeof distanceAu === 'number' && isFinite(distanceAu)) {
+        rows += row('거리', formatDistance(distanceAu))
+      }
+      if (typeof vmag === 'number' && isFinite(vmag)) {
+        rows += row('겉보기 등급', vmag.toFixed(2))
+        if (typeof distanceAu === 'number' && isFinite(distanceAu)) {
+          rows += row('절대 등급', absoluteMagnitude(vmag, distanceAu).toFixed(2))
+        }
+      }
+      if (typeof md.BVMag === 'number') {
+        const color = bvToColor(md.BVMag)
+        rows += row(
+          `색지수 (B-V ${md.BVMag.toFixed(2)})`,
+          `<span class="swatch" style="background:${color}"></span>`,
+        )
+        rows += row('표면온도', `약 ${Math.round(temperatureFromBV(md.BVMag))} K`)
+      }
+      if (typeof md.spect_t === 'string' && md.spect_t) {
+        rows += row('분광형', md.spect_t)
+      }
+    } else {
+      if (typeof vmag === 'number' && isFinite(vmag)) {
+        rows += row('겉보기 등급', vmag.toFixed(2))
+      }
+      if (typeof distanceAu === 'number' && isFinite(distanceAu)) {
+        rows += row('거리', formatDistance(distanceAu))
+      }
+      if (md && typeof md.morpho === 'string' && md.morpho) {
+        rows += row('형태 분류', md.morpho)
+      }
     }
 
     panel.innerHTML =

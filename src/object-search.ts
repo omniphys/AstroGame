@@ -98,16 +98,19 @@ export function createObjectSearch(stel: StelInstance): HTMLDivElement {
     const observed = stel.convertFrame(stel.core.observer, 'ICRF', 'OBSERVED', icrf)
     // core.lock (set by a previous pointAndLock, e.g. any earlier real
     // object selection) keeps re-centering the view on its old target every
-    // frame and isn't touched by a normal lookAt() call - the move just
-    // gets silently overridden a frame later. Setting core.lock = null
-    // doesn't work either: the engine's JS property binding collapses
-    // null/undefined into a getter call (obj.js's _call treats a 0 args
-    // string as "no arguments" = read, not write - verified live), so it's
-    // a silent no-op. duration=0 takes a different code path in the engine
-    // (core_lookat in core.c) that both snaps the view there immediately
-    // *and* memsets the whole lock/animation state to zero as a side
-    // effect - confirmed live this is the only way that actually clears it.
-    stel.lookAt(observed, 0)
+    // frame, which would fight a normal animated lookAt() and snap the view
+    // back - and core.lock = null is a silent no-op (the JS property binding
+    // collapses null/undefined into a getter call, obj.js's _call treats a
+    // 0-arg string as "no arguments" = read, not write - verified live).
+    // duration=0 takes a different code path in the engine (core_lookat in
+    // core.c) that memsets the whole lock/animation state to zero as a side
+    // effect - confirmed live this is the only way that actually clears it -
+    // but it also snaps the view instantly, so do it once at the *current*
+    // direction (core.observer.azalt, no visible jump) purely to drop the
+    // stale lock, then animate to the real target same as pointAndLock()
+    // does for every other entry.
+    stel.lookAt(stel.core.observer.azalt, 0)
+    stel.lookAt(observed, 1.0)
   }
 
   function trySelect(entry: CuratedObject, attempt: number) {
