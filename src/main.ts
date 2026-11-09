@@ -72,13 +72,16 @@ async function main() {
   core.comets.addDataSource({ url: assetUrl('/skydata/CometEls.txt'), key: 'mpc_comets' })
   core.satellites.addDataSource({ url: assetUrl('/skydata/tle_satellite.jsonl.gz'), key: 'jsonl/sat' })
   // core.dss only ever holds one active survey (addDataSource replaces
-  // whatever was there), so this is a choice between the real CDS DSS
-  // survey (https://alasky.cds.unistra.fr/DSS/DSSColor, the whole sky, but
-  // a live third-party fetch some networks can't reach at all - see
-  // README's "DSS photos" note) and this bundled one (always works, color,
-  // but only covers 6 famous nebulae/galaxies - built by
-  // tools/mirror-nebula-dss.cjs, see the same README note).
-  core.dss.addDataSource({ url: assetUrl('/skydata/nebula-dss') })
+  // whatever was there). The real CDS DSS survey is the whole sky, but
+  // https://alasky.cds.unistra.fr/DSS/DSSColor (the CDS origin itself) is
+  // unreachable from some networks - see README's "DSS photos" note.
+  // data.stellarium.org mirrors the identical CDS P/DSS2/color data
+  // (confirmed via its /surveys/dss/properties: creator_did ivo://CDS/P/DSS2/color,
+  // moc_sky_fraction 1 - full sky) with Access-Control-Allow-Origin: * (verified
+  // live, same as the planet surveys already fetched from this host above), so
+  // it works as a live, whole-sky, always-reachable-here substitute without
+  // needing our own proxy.
+  core.dss.addDataSource({ url: 'https://data.stellarium.org/surveys/dss' })
 
   // Constellation lines/art are hidden by default in the engine; turn lines on
   // so the sky doesn't look empty, and leave art as an opt-in toggle.
