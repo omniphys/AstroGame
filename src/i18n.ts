@@ -34,6 +34,14 @@ export function ko(name: string): string {
   return dict[titleCase(name)] || name
 }
 
+// All [english, korean] pairs in the loaded dictionary - the closest thing
+// to a full catalog of named objects we have client-side (engine-side name
+// search is exact-match only, see sky-nav.ts), so catalog-search.ts builds
+// its suggestion list from this instead.
+export function dictEntries(): [string, string][] {
+  return dict ? Object.entries(dict) : []
+}
+
 // "한글명 (English name)" when translated, otherwise just the original name.
 export function koWithEn(name: string): string {
   const translated = ko(name)

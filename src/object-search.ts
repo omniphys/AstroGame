@@ -1,4 +1,5 @@
 import type { StelInstance } from './engine'
+import { lookAtRaDec, resolveDesignation, selectAndLock } from './sky-nav'
 
 interface CuratedObject {
   label: string
@@ -80,63 +81,24 @@ export function createObjectSearch(stel: StelInstance): HTMLDivElement {
   const hint = document.createElement('div')
   hint.className = 'object-search-hint'
 
-  // getObj() on a DSO (e.g. IC 2118) that isn't in an already-loaded HiPS
-  // tile returns null on the first call but kicks off an async load for
-  // that tile in the background (dso.c's get_tile with HIPS_LOAD_IN_THREAD)
-  // - so a miss doesn't mean "not found", it can just mean "not loaded yet"
-  // (more likely the farther the view currently is from that object, since
-  // nearby tiles are more likely already cached). Retry briefly before
-  // reporting failure.
-  const LOOKUP_RETRY_MS = 200
-  const LOOKUP_MAX_ATTEMPTS = 15 // ~3s total
-
-  function lookAtRaDec(raDeg: number, decDeg: number) {
-    const ra = raDeg * stel.D2R
-    const dec = decDeg * stel.D2R
-    const cosDec = Math.cos(dec)
-    const icrf = [cosDec * Math.cos(ra), cosDec * Math.sin(ra), Math.sin(dec), 0]
-    const observed = stel.convertFrame(stel.core.observer, 'ICRF', 'OBSERVED', icrf)
-    // core.lock (set by a previous pointAndLock, e.g. any earlier real
-    // object selection) keeps re-centering the view on its old target every
-    // frame, which would fight a normal animated lookAt() and snap the view
-    // back - and core.lock = null is a silent no-op (the JS property binding
-    // collapses null/undefined into a getter call, obj.js's _call treats a
-    // 0-arg string as "no arguments" = read, not write - verified live).
-    // duration=0 takes a different code path in the engine (core_lookat in
-    // core.c) that memsets the whole lock/animation state to zero as a side
-    // effect - confirmed live this is the only way that actually clears it -
-    // but it also snaps the view instantly, so do it once at the *current*
-    // direction (core.observer.azalt, no visible jump) purely to drop the
-    // stale lock, then animate to the real target same as pointAndLock()
-    // does for every other entry.
-    stel.lookAt(stel.core.observer.azalt, 0)
-    stel.lookAt(observed, 1.0)
-  }
-
-  function trySelect(entry: CuratedObject, attempt: number) {
+  function trySelect(entry: CuratedObject) {
     // Entries with a fallback are known to never resolve via getObj() at
     // all (confirmed absent from the bundled catalog) - go straight to the
     // known coordinates instead of wasting the retry window first.
     if (entry.fallbackRaDeg !== undefined && entry.fallbackDecDeg !== undefined) {
-      lookAtRaDec(entry.fallbackRaDeg, entry.fallbackDecDeg)
+      lookAtRaDec(stel, entry.fallbackRaDeg, entry.fallbackDecDeg)
       return
     }
 
-    const obj = stel.getObj(entry.designation)
-    if (!obj) {
-      if (attempt < LOOKUP_MAX_ATTEMPTS) {
-        setTimeout(() => trySelect(entry, attempt + 1), LOOKUP_RETRY_MS)
-        return
-      }
-      hint.textContent = '찾을 수 없음'
-      setTimeout(() => (hint.textContent = ''), 2000)
-      return
-    }
-
-    // Same effect as clicking the object on the canvas or pressing Space:
-    // select it (drives selection-panel.ts) and center+lock the view on it.
-    stel.core.selection = obj
-    stel.pointAndLock(obj, 1.0)
+    resolveDesignation(
+      stel,
+      [entry.designation],
+      (obj) => selectAndLock(stel, obj, 1.0),
+      () => {
+        hint.textContent = '찾을 수 없음'
+        setTimeout(() => (hint.textContent = ''), 2000)
+      },
+    )
   }
 
   select.addEventListener('change', () => {
@@ -144,7 +106,7 @@ export function createObjectSearch(stel: StelInstance): HTMLDivElement {
     select.value = ''
     if (!designation) return
     const entry = CURATED_OBJECTS.find((e) => e.designation === designation)
-    if (entry) trySelect(entry, 0)
+    if (entry) trySelect(entry)
   })
 
   wrapper.appendChild(select)

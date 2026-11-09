@@ -4,6 +4,7 @@ import { initObserverLocation } from './location'
 import { createToolbar } from './ui'
 import { createSelectionPanel } from './selection-panel'
 import { createObjectSearch } from './object-search'
+import { createCatalogSearch } from './catalog-search'
 import { createSolarSystem3DView } from './solar-system-3d'
 import { createGalaxy3DView } from './galaxy-3d'
 import { createViewButtons } from './view-buttons'
@@ -90,6 +91,7 @@ async function main() {
   createToolbar(stel)
   createSelectionPanel(stel)
   createObjectSearch(stel)
+  createCatalogSearch(stel)
   const openSolarSystem = createSolarSystem3DView()
   const openGalaxy = createGalaxy3DView()
   createViewButtons(openSolarSystem, openGalaxy)
