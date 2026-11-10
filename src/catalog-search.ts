@@ -7,7 +7,8 @@
 // from Stellarium's own translation data (~7000 entries).
 import type { StelInstance } from './engine'
 import { dictEntries } from './i18n'
-import { resolveDesignation, selectAndLock } from './sky-nav'
+import { CURATED_OBJECTS } from './object-search'
+import { lookAtRaDec, resolveDesignation, selectAndLock } from './sky-nav'
 
 interface SearchEntry {
   en: string
@@ -18,12 +19,35 @@ interface SearchEntry {
   // try the bare name first and the engine's "NAME X" proper-name
   // convention (used by planets/moons/sun) second.
   candidates: string[]
+  // Only set for IC 2118 (see object-search.ts) - resolves via lookAtRaDec
+  // instead of getObj(), since it has no catalog entry at all.
+  fallbackRaDeg?: number
+  fallbackDecDeg?: number
 }
 
 const MAX_RESULTS = 12
 
+// Catalog-number designations (M31, IC 434, NGC 1976, ...) aren't in the
+// Korean skyculture dictionary at all - it only has proper names
+// ("Andromeda Galaxy"), per i18n.ts's own comment - so typing "M31" would
+// otherwise return nothing despite the placeholder suggesting it works.
+// Index CURATED_OBJECTS's catalog-style entries too, keyed on the
+// designation with its space removed (how people actually type these).
+function catalogIndex(): SearchEntry[] {
+  return CURATED_OBJECTS.filter((o) => /^(M|IC|NGC)\s*\d/i.test(o.designation)).map((o) => ({
+    en: o.designation.replace(/\s+/g, ''),
+    // label is already "이름 (M31)" - drop the trailing designation so the
+    // rendered "ko (en)" result item doesn't repeat it twice.
+    ko: o.label.replace(/\s*\([^)]*\)\s*$/, ''),
+    candidates: [o.designation],
+    fallbackRaDeg: o.fallbackRaDeg,
+    fallbackDecDeg: o.fallbackDecDeg,
+  }))
+}
+
 function buildIndex(): SearchEntry[] {
-  return dictEntries().map(([en, ko]) => ({ en, ko, candidates: [en, `NAME ${en}`] }))
+  const fromDict = dictEntries().map(([en, ko]) => ({ en, ko, candidates: [en, `NAME ${en}`] }))
+  return [...catalogIndex(), ...fromDict]
 }
 
 function rank(query: string, entry: SearchEntry): number {
@@ -94,6 +118,12 @@ export function createCatalogSearch(stel: StelInstance): HTMLDivElement {
   function pick(entry: SearchEntry) {
     input.value = ''
     closeList()
+    // IC 2118 has no catalog entry at all (see object-search.ts) - getObj()
+    // would never resolve it no matter how long resolveDesignation retried.
+    if (entry.fallbackRaDeg !== undefined && entry.fallbackDecDeg !== undefined) {
+      lookAtRaDec(stel, entry.fallbackRaDeg, entry.fallbackDecDeg)
+      return
+    }
     // Resolution can take a couple of seconds (retrying while the engine
     // loads the object's data tile - see resolveDesignation), and the
     // dictionary this search is built from is far broader than what's

@@ -43,9 +43,65 @@ function absoluteMagnitude(vmag: number, distanceAu: number): number {
 }
 
 // Ballesteros' formula (B-V -> effective temperature), a standard
-// closed-form approximation - valid roughly for -0.4 < bv < 2.
-function temperatureFromBV(bv: number): number {
+// closed-form approximation - valid roughly for -0.4 < bv < 2. It's a poor
+// fit at the hot end though: a blackbody's B-V stops changing much past
+// ~20000K (the flux peak has moved into the UV, out of B/V's reach), so the
+// formula compresses the entire O/early-B range into values way below their
+// real temperatures - confirmed live: Alnitak (O9.7, catalog B-V -0.20)
+// comes out ~13600K here vs. ~29500-33000K in the literature.
+function ballesterosTemperatureFromBV(bv: number): number {
   return 4600 * (1 / (0.92 * bv + 1.7) + 1 / (0.92 * bv + 0.62))
+}
+
+// Short calibration table for the hot end (O3V-A0V), b-v and Teff from the
+// Pecaut & Mamajek (2013) main-sequence sequence - a modern, widely-cited
+// calibration that (unlike Ballesteros) stays well-behaved down to the
+// hottest O stars. Below the table's blue end, clamp to the O3V point
+// rather than extrapolating a fit with no calibration data behind it.
+// Above its red end (~A0V), hand off to Ballesteros, which is fine from
+// here redward.
+//
+// This still won't fully fix an individual very blue star whose catalog
+// B-V is reddened by interstellar dust (common for O/B stars - they're
+// often embedded in the dust they ionize, Alnitak included): reddening
+// shifts the *observed* B-V redder than the star's true color, so any
+// B-V-only formula - this one too - will still undershoot for it. There's
+// no per-star extinction data in the bundled catalog to correct for that.
+const HOT_STAR_BV_TEFF: [bv: number, teffK: number][] = [
+  [-0.33, 44900], // O3V
+  [-0.3, 33000], // O9V/B0V
+  [-0.26, 26000], // B1V
+  [-0.24, 21000], // B2V
+  [-0.2, 17000], // B3V
+  [-0.17, 15700], // B5V
+  [-0.11, 11900], // B8V
+  [-0.02, 9700], // A0V
+]
+
+// Orion's Belt - all three are O/early-B supergiants embedded in the
+// dusty Orion OB1 association, so their catalog B-V is reddened enough
+// that even the hot-star table above still undershoots badly (e.g.
+// Alnitak's B-V of -0.20 implies B3V territory, but it's really O9.7Ib).
+// Rather than guess a per-star dereddening correction with data we don't
+// have, use literature effective temperatures directly for these three.
+// Values are the commonly-cited figures for each (Alnitak O9.7Ib, Alnilam
+// B0Ia, Mintaka O9.5II); expect +-1500K depending on source.
+const LITERATURE_TEMPERATURE_K: Record<string, number> = {
+  Alnitak: 29500,
+  Alnilam: 27000,
+  Mintaka: 29500,
+}
+
+function temperatureFromBV(bv: number): number {
+  const table = HOT_STAR_BV_TEFF
+  if (bv >= table[table.length - 1][0]) return ballesterosTemperatureFromBV(bv)
+  if (bv <= table[0][0]) return table[0][1]
+  for (let i = 0; i < table.length - 1; i++) {
+    const [bv0, t0] = table[i]
+    const [bv1, t1] = table[i + 1]
+    if (bv >= bv0 && bv <= bv1) return t0 + ((bv - bv0) / (bv1 - bv0)) * (t1 - t0)
+  }
+  return ballesterosTemperatureFromBV(bv) // unreachable, keeps TS happy
 }
 
 // obj.path isn't populated for most individual sky objects (only for
@@ -114,7 +170,9 @@ export function createSelectionPanel(stel: StelInstance): void {
           `색지수 (B-V ${md.BVMag.toFixed(2)})`,
           `<span class="swatch" style="background:${color}"></span>`,
         )
-        rows += row('표면온도', `약 ${Math.round(temperatureFromBV(md.BVMag))} K`)
+        const litMatch = obj.designations().find((d: string) => d in LITERATURE_TEMPERATURE_K)
+        const teff = litMatch ? LITERATURE_TEMPERATURE_K[litMatch] : temperatureFromBV(md.BVMag)
+        rows += row('표면온도', `약 ${Math.round(teff)} K`)
       }
       if (typeof md.spect_t === 'string' && md.spect_t) {
         rows += row('분광형', md.spect_t)

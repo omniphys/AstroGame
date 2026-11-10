@@ -1,7 +1,7 @@
 import type { StelInstance } from './engine'
 import { lookAtRaDec, resolveDesignation, selectAndLock } from './sky-nav'
 
-interface CuratedObject {
+export interface CuratedObject {
   label: string
   designation: string
   // Only set where needed (see IC 2118 below): J2000 RA/Dec in degrees to
@@ -21,7 +21,11 @@ interface CuratedObject {
 // case-insensitive match (e.g. bright stars only match on their SIMBAD-style
 // Bayer form "* alf CMa", not "NAME Sirius"/a HIP number; DSOs need a space
 // in "M 31") - verified live against the dev server, not guessed.
-const CURATED_OBJECTS: CuratedObject[] = [
+// Exported so catalog-search.ts can also index these by their catalog
+// designation (e.g. "M31") - the Korean skyculture dictionary it otherwise
+// builds its index from only has proper names ("Andromeda Galaxy"), not
+// Messier/IC/NGC numbers, so "M31" alone would otherwise return nothing.
+export const CURATED_OBJECTS: CuratedObject[] = [
   // 은하수 자체는 선택 가능한 카탈로그 천체가 아니라서(엔진이 그냥 하늘 전체
   // 배경 텍스처로만 다룸 - core.selection에 대입하면 WASM에서 바로 크래시남,
   // 실측함) 은하수가 가장 짙게 보이는 궁수자리 방향으로 대신 이동시킨다.
